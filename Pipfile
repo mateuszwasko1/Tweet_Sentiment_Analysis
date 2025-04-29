@@ -5,6 +5,9 @@ name = "pypi"
 
 [packages]
 pre-commit = "*"
+opendatasets = "*"
+pandas = "*"
+kaggle = "*"
 
 [dev-packages]
 
