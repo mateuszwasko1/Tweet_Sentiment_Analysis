@@ -1,5 +1,47 @@
 # Applied ML Template 🛠️
 
+**Set-Up each time:**
+Pull the latest updates to the repository
+```bash
+    git pull
+```
+- Make sure to check that you are in the right branch!
+
+Activate the virtual environment in the terminal:
+```bash
+    pipenv shell
+```
+Now you can run any code!
+
+**Making new branch**
+The following makes a new branch ("branch_name"), and moves you onto that branch
+```bash
+    git checkout -b branch_name
+```
+And only checkout moves you to the branch "branch_name"
+
+```bash
+    git checkout branch_name
+```
+
+**Pushing when finishing coding**
+```bash
+    git add .
+    git commit -m "name of commit"
+    git push
+```
+Make the name easy to understand for others in case we need to got back to the commits
+
+**Installing New Dependencies**
+```bash
+    pipenv install scikit-learn
+```
+
+**Running code in notebooks**
+When clicking on `run`, or the triangle, choose the python interpreter (pipenv) for this repository: `C:\Users\Lisa\.virtualenvs\Applied_ML-Bx5bJ9NX`. 
+
+If it automatically runs, then make sure you have the right interpreter by clicking on the interpreter chooser which is all the way on the right on the same height as "Generate +Code, etc."
+
 **Welcome to Applied Machine Learning!** This template is designed to streamline the development process and boost the quality of your code.
 
 Before getting started with your projects, we encourage you to carefully read the sections below and familiarise yourselves with the proposed tools.
