@@ -1,5 +1,5 @@
 # Applied ML Template 🛠️
-
+## Explanation to each other for code:
 **Set-Up each time:**
 Pull the latest updates to the repository
 ```bash
@@ -42,7 +42,10 @@ When clicking on `run`, or the triangle, choose the python interpreter (pipenv) 
 
 If it automatically runs, then make sure you have the right interpreter by clicking on the interpreter chooser which is all the way on the right on the same height as "Generate +Code, etc."
 
-**Welcome to Applied Machine Learning!** This template is designed to streamline the development process and boost the quality of your code.
+
+
+## Welcome to Applied Machine Learning!
+This template is designed to streamline the development process and boost the quality of your code.
 
 Before getting started with your projects, we encourage you to carefully read the sections below and familiarise yourselves with the proposed tools.
 
