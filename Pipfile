@@ -9,6 +9,11 @@ opendatasets = "*"
 pandas = "*"
 kaggle = "*"
 datasets = "*"
+seaborn = "*"
+matplotlib = "*"
+scikit-learn = "*"
+wordcloud = "*"
+jupyter = "*"
 
 [dev-packages]
 
