@@ -23,7 +23,6 @@ And only checkout moves you to the branch "branch_name"
 ```bash
     git checkout branch_name
 ```
-
 **Pushing when finishing coding**
 ```bash
     git add .
@@ -31,6 +30,8 @@ And only checkout moves you to the branch "branch_name"
     git push
 ```
 Make the name easy to understand for others in case we need to got back to the commits
+
+When the commit is good to be merged onto the main branch, leave the master branch as it is! This one is protected, and only things can be put on this branch by pull requests that have been reviewed!
 
 **Installing New Dependencies**
 ```bash
