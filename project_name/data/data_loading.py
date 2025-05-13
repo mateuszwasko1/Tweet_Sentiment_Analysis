@@ -4,6 +4,10 @@ import os
 
 class DataLoading():
     def __init__(self):
+        """
+        Stores the relative paths of the dowloaded data and desired path for
+        saving the converted and merged data.
+        """
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.base_input = os.path.join(script_dir, "..", "..", "data",
                                        "original", "EI-reg")
@@ -13,7 +17,20 @@ class DataLoading():
     def merge_emotions_to_df(self, dataset: str) -> tuple[pd.DataFrame,
                                                           os.PathLike]:
         """
-        Loads all emotion files into one DataFrame and saves to JSON.
+        Loads all emotion txt files into one DataFrame.
+
+        Args:
+            dataset (str): The name of the desired dataset which emotions will
+            be merged.
+
+        Returns:
+            pd.DataFrame: The merged emotions of the given dataset
+            os.PathLike: The path where a json file of the created DataFrame
+            can be stored
+
+        Raises:
+            ValueError: If the passed dataset is not in the allowed set of
+            strings.
         """
         valid_datasets = ["development", "test-gold", "training"]
         if dataset not in valid_datasets:
@@ -48,6 +65,9 @@ class DataLoading():
         return merged_df, json_path
 
     def loading_pipeline(self):
+        """
+        Loads all the merged datasets into JSON files for later retrieval.
+        """
         datasets = ["development", "test-gold", "training"]
         loading = DataLoading()
         for i in datasets:
