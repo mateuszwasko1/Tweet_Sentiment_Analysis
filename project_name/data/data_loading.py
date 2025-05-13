@@ -72,7 +72,7 @@ class DataLoading():
         loading = DataLoading()
         for i in datasets:
             merged_df, json_path = loading.merge_emotions_to_df(i)
-            merged_df.to_json(json_path, orient="records", indent=2,
+            merged_df.to_json(json_path, orient="records", lines=True,
                               force_ascii=False)
 
 

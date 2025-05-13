@@ -27,6 +27,6 @@ class DataLoadingTest(unittest.TestCase):
             df, json_path = self.loader.merge_emotions_to_df(dataset)
             self.assertTrue(os.path.exists(json_path))
             with open(json_path, 'r', encoding='utf-8') as file:
-                data = json.load(file)
+                data = [json.loads(line) for line in file]
                 self.assertGreater(len(data), 0)
             self.assertIsInstance(data, list)
