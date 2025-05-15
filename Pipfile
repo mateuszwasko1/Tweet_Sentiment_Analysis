@@ -15,6 +15,9 @@ wordcloud = "*"
 jupyter = "*"
 ipykernel = "*"
 pandas = "*"
+ekphrasis = "*"
+clean-text = "*"
+emoji = "*"
 
 [dev-packages]
 
