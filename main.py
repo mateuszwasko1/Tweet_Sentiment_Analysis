@@ -1,8 +1,5 @@
-# This is a sample Python script.
-
-def hello_world():
-    return "Hello, World!"
-
+from project_name import BaselineModel
 
 if __name__ == '__main__':
-    hello_world()
+    baseline = BaselineModel()
+    print(baseline.pipeline())
