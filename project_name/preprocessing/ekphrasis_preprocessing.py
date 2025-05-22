@@ -57,14 +57,11 @@ class MainPreprocessing():
         without_punctuation = [token for token in tokens if token not in punctuation]
         return without_punctuation
     
-    def clean_text(self,text:str, model)->str:
+    def clean_text(self,text:str)->str:
         text = self.translate_emoji(text)
         text = text.replace(":", " ")
         text = text.replace("\\n"," ")
-        if model == "BERT":
-            tokens = self.use_ekphrasis(text)
-        else:
-            tokens = text.split()
+        tokens = self.use_ekphrasis(text)
         tokens = self.remove_punctuation(tokens)
         tokens = [self.apply_clean_text(token) for token in tokens]
         return tokens

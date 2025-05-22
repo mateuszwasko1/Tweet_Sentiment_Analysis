@@ -30,7 +30,7 @@ class BaselinePreprocessor():
         return X_vec
 
     def preprocess_df(self, df: pd.DataFrame):
-        X, y = self.extract_features_labels(df, "Tweet", "Emotion")
+        X, y = self.extract_features_labels(df, "tweet", "emotion")
         X = X.apply(self.clean_text)
         X_vec = self.vectorize(X)
         return X_vec, y
