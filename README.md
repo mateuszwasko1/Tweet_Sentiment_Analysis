@@ -43,7 +43,15 @@ When clicking on `run`, or the triangle, choose the python interpreter (pipenv) 
 
 If it automatically runs, then make sure you have the right interpreter by clicking on the interpreter chooser which is all the way on the right on the same height as "Generate +Code, etc."
 
-
+## While coding ##
+**Unittesting**
+Everything that you code, make sure to write unittests on them. They can be run using the following line in the terminal:
+```bash
+    python -m unittest tests/data/test_data.py
+```
+To see specific test names you can run: `python -m unittest -v tests/data/test_data.py`
+**Flake 8**
+Make sure that you have the Flake8 extension on VScode enabled, so that we can keep the stylecheck on!
 
 ## Welcome to Applied Machine Learning!
 This template is designed to streamline the development process and boost the quality of your code.
@@ -153,11 +161,11 @@ Your repository should look something like this:
 ├───notebooks  # Contains experimental .ipynbs
 ├───project_name
 │   ├───data  # For data processing, not storing .csv
-│   ├───features
-│   └───models  # For model creation, not storing .pkl
+│   ├───models # For model creation, not storing .pkl
+│   └───preprocessing  
 ├───reports
 ├───tests
-│   ├───data
+│   ├───data # Contains a test file for each "normal file"
 │   ├───features
 │   └───models
 ├───.gitignore
