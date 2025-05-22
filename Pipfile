@@ -18,6 +18,8 @@ pandas = "*"
 ekphrasis = "*"
 clean-text = "*"
 emoji = "*"
+torch = "*"
+transformers = "*"
 
 [dev-packages]
 
