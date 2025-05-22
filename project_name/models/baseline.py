@@ -1,41 +1,36 @@
 from project_name.preprocessing import BaselinePreprocessor
-from sklearn.linear_model import LogisticRegression, LinearRegression
-from sklearn.metrics import classification_report, mean_squared_error, r2_score
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV
 
 
 class BaselineModel:
 
-    def regression(self, regression_type):
-        if regression_type == "logisitc":
-            regression = LogisticRegression(max_iter=1000)
-        else:
-            regression = LinearRegression()
+    def regression(self, data):
+        (X_training, y_training), (X_test, y_test) = data
 
-        regression.fit(self.X_training, self.y_training)
-        y_prediction = regression.predict(self.X_test)
+        parameters = {
+            "C": [0.01, 0.1, 1, 10],
+            "penalty": ["l1", "l2"],
+            "solver": ["liblinear"],
+            "max_iter": [1000]
+        }
 
-        if regression_type == "logisitc":
-            return classification_report(self.y_test, y_prediction)
-        else:
-            mse = mean_squared_error(self.y_test, y_prediction)
-            r2 = r2_score(self.y_test, y_prediction)
-            return mse, r2
+        grid = GridSearchCV(LogisticRegression(), parameters, cv = 5)
+        grid.fit(X_training, y_training)
+
+        print(grid.best_params_)
+
+        grid_predictions = grid.predict(X_test)
+        return classification_report(y_test, grid_predictions)
+
+        # regression = LogisticRegression(max_iter=1000)
+        # regression.fit(X_training, y_training)
+        # y_prediction = regression.predict(X_test)
+        # return classification_report(y_test, y_prediction)
 
     def pipeline(self):
-        preprocesser_tfidf = BaselinePreprocessor(use_tfidf=True)
-        (self.X_training, self.y_training), (self.X_test, self.y_test) =\
-            preprocesser_tfidf.preprocessing_pipeline()
+        preprocesser_tfidf = BaselinePreprocessor()
+        data = preprocesser_tfidf.preprocessing_pipeline()
 
-        logistic_results = self.regression(regression_type="logisitc")
-        print(logistic_results)
-
-
-        preprocesser_glove = BaselinePreprocessor(use_tfidf=False)
-        (self.X_training, self.y_training), (self.X_test, self.y_test) =\
-            preprocesser_glove.preprocessing_pipeline()
-        linear_results = self.regression(regression_type="linear")
-        print(linear_results)
-
-if __name__ == "__main__":
-    baseline = BaselineModel()
-    baseline.pipeline()
+        return self.regression(data)
