@@ -1,12 +1,13 @@
 import os
 import pandas as pd
+import string 
 from sklearn.feature_extraction.text import TfidfVectorizer
 from ekphrasis.classes.preprocessor import TextPreProcessor
 from ekphrasis.classes.tokenizer import SocialTokenizer
 from ekphrasis.dicts.emoticons import emoticons
 import emoji
 from cleantext import clean
-#from punctuation import Punctuation
+
 
 class MainPreprocessing():
     def __init__(self,test_data: bool = False):
@@ -51,28 +52,26 @@ class MainPreprocessing():
     def translate_emoji(self, text:str) -> str:
         return emoji.demojize(text)
     
-    def clean_text(self,text:str)->str:
+    def remove_punctuation(self,tokens:list[str])->str:
+        punctuation = set(string.punctuation) - {"!"} - {"?"}
+        without_punctuation = [token for token in tokens if token not in punctuation]
+        return without_punctuation
+    
+    def clean_text(self,text:str, model)->str:
         text = self.translate_emoji(text)
-        tokens = self.use_ekphrasis(text)
+        text = text.replace(":", " ")
+        text = text.replace("\\n"," ")
+        if model == "BERT":
+            tokens = self.use_ekphrasis(text)
+        else:
+            tokens = text.split()
+        tokens = self.remove_punctuation(tokens)
         tokens = [self.apply_clean_text(token) for token in tokens]
         return tokens
-    """
-    def vectorize(self, X: pd.DataFrame, use_tfidf: bool = True):
-        vectorizer = TfidfVectorizer()
-        if use_tfidf is True:
-            if self.test_data is True:
-                X_vec = vectorizer.transform(X)
-            else:
-                X_vec = vectorizer.fit_transform(X)
-        # else: Glove Implementation
-        return X_vec
-    """
     
     def preprocess_df(self, df: pd.DataFrame):
         X, y = self.extract_features_labels(df, "tweet", "emotion")
         X = X.apply(self.clean_text)
-        #X_vec = self.vectorize(X, use_tfidf=True)
-        #return X_vec, y
         return X,y
 
     def preprocessing_pipeline(self):
@@ -97,4 +96,4 @@ if __name__ == "__main__":
     preprocessor = MainPreprocessing()
     (X_trainign,y_training), (X_dev, y_dev), (X_test, y_test) = preprocessor.preprocessing_pipeline()
 
-    print(X_trainign[7])
+    print(X_trainign[0:8])
