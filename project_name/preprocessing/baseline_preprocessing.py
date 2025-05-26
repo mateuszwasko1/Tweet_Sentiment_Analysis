@@ -1,8 +1,8 @@
 import re
 import os
 import pandas as pd
-import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
+
 
 class BaselinePreprocessor():
     def __init__(self):
@@ -48,19 +48,22 @@ class BaselinePreprocessor():
                                 orient="records", lines=True)
         test_data = pd.read_json(test_path,
                                  orient="records", lines=True)
-        X_training, y_training = self.preprocess_df(pd.concat([training_data, dev_data]))
+        X_training, y_training = self.preprocess_df(pd.concat([training_data,
+                                                               dev_data]))
         self.test_data = False
-        #Either delete line below or dont concat
-        #X_dev, y_dev = self.preprocess_df(dev_data)
+        # Either delete line below or dont concat
+        # X_dev, y_dev = self.preprocess_df(dev_data)
         X_test, y_test = self.preprocess_df(test_data)
-        #return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
+        # return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
         return (X_training, y_training), (X_test, y_test)
 
 
 if __name__ == "__main__":
     preprocessor = BaselinePreprocessor()
-    #(X_training, y_training), (X_dev, y_dev), (X_test, y_test) = preprocessor.preprocessing_pipeline()
-    (X_training, y_training), (X_test, y_test) = preprocessor.preprocessing_pipeline()
+    # ((X_training, y_training), (X_dev, y_dev),
+    # (X_test, y_test)) = preprocessor.preprocessing_pipeline()
+    ((X_training, y_training),
+     (X_test, y_test)) = preprocessor.preprocessing_pipeline()
     print(X_training, y_training)
-    #print(X_dev, y_dev)
+    # print(X_dev, y_dev)
     print(X_test, y_test)
