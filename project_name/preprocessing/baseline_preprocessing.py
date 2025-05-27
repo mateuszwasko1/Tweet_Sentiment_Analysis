@@ -6,12 +6,11 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 
 class BaselinePreprocessor():
     def __init__(self):
-        self.test_data = True
+        self.training_data = True
 
     def extract_features_labels(self, df: pd.DataFrame, feature_name: str,
                                 label_name: str
                                 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        # Add value error to check if allowed names are passed on
         X = df[feature_name]
         y = df[label_name]
         return X, y
@@ -22,7 +21,7 @@ class BaselinePreprocessor():
         return text
 
     def vectorize(self, X: pd.DataFrame):
-        if self.test_data is False:
+        if self.training_data is False:
             X_vec = self.vectorizer.transform(X)
         else:
             self.vectorizer = TfidfVectorizer()
@@ -48,19 +47,17 @@ class BaselinePreprocessor():
                                 orient="records", lines=True)
         test_data = pd.read_json(test_path,
                                  orient="records", lines=True)
-        X_training, y_training = self.preprocess_df(pd.concat([training_data, dev_data]))
-        self.test_data = False
-        #Either delete line below or dont concat
-        #X_dev, y_dev = self.preprocess_df(dev_data)
+        X_training, y_training = self.preprocess_df(training_data)
+        self.training_data = False
+        X_dev, y_dev = self.preprocess_df(dev_data)
         X_test, y_test = self.preprocess_df(test_data)
-        #return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
-        return (X_training, y_training), (X_test, y_test)
+        return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
 
 
 if __name__ == "__main__":
     preprocessor = BaselinePreprocessor()
-    #(X_training, y_training), (X_dev, y_dev), (X_test, y_test) = preprocessor.preprocessing_pipeline()
+    (X_training, y_training), (X_dev, y_dev), (X_test, y_test) = preprocessor.preprocessing_pipeline()
     (X_training, y_training), (X_test, y_test) = preprocessor.preprocessing_pipeline()
     print(X_training, y_training)
-    #print(X_dev, y_dev)
+    print(X_dev, y_dev)
     print(X_test, y_test)
