@@ -161,6 +161,7 @@ Your repository should look something like this:
 ├───notebooks  # Contains experimental .ipynbs
 ├───project_name
 │   ├───data  # For data processing, not storing .csv
+│   ├───deployment # For model deployment
 │   ├───models # For model creation, not storing .pkl
 │   └───preprocessing  
 ├───reports
