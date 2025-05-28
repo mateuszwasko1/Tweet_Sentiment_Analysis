@@ -32,6 +32,6 @@ class BaselineModel:
 
     def pipeline(self):
         preprocesser_tfidf = BaselinePreprocessor()
-        data = preprocesser_tfidf.preprocessing_pipeline()
+        data = preprocesser_tfidf.preprocessing_pipeline(at_inference=False)
 
         return self.regression(data)
