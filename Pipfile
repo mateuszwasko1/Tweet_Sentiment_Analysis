@@ -21,6 +21,7 @@ emoji = "*"
 torch = "*"
 transformers = "*"
 fastapi = {extras = ["standard"], version = "*"}
+uvicorn = "*"
 
 [dev-packages]
 
