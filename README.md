@@ -12,7 +12,7 @@ Response Body
 ```bash
     {
 "input":"you are stupid",
-"prediction":"Prediction for 'you are stupid': ['anger']"
+"prediction":"anger"
 }
 ```
 
