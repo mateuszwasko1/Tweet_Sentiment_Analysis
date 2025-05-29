@@ -20,7 +20,7 @@ clean-text = "*"
 emoji = "*"
 torch = "*"
 transformers = "*"
-fastapi = "*"
+fastapi = {extras = ["standard"], version = "*"}
 
 [dev-packages]
 
