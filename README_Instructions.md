@@ -4,7 +4,17 @@ Run the following code in the terminal to start the API
 ```bash
     uvicorn main:app --reload
 ```
-Use the \predic endpoint to enter your tweet as a string to get the prediction for the emotion
+Then go to http://127.0.0.1:8000
+
+Click at the POST /predict box and then “Try it out”. This will give you a box where you can input a string. The prediction can be found in the following box:
+
+Response Body
+```bash
+    {
+"input":"you are stupid",
+"prediction":"Prediction for 'you are stupid': ['anger']"
+}
+```
 
 ## INSTALL THE DEPENDENCIES
 Make sure that Pipenv is installed.
