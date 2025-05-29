@@ -2,6 +2,7 @@ import os
 from fastapi import FastAPI
 import sys
 import pandas as pd
+import numpy as np
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
                                              '..')))
 from project_name.models.save_load_model import ModelSaver
@@ -19,5 +20,6 @@ def predict_emotion(text: str) -> str:
     tweet = pd.DataFrame({"tweet": [text]})
     tweet_cleaned = preprocessor.preprocessing_pipeline(at_inference=True, data=tweet)
     prediction = model.predict(tweet_cleaned)
-    return (f"Prediction for '{text}': {prediction}")
-    
+    if isinstance(prediction, (list, tuple, np.ndarray)):
+        return prediction[0]
+    return prediction
