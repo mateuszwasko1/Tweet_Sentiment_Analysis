@@ -1,4 +1,4 @@
-from project_name.preprocessing import BaselinePreprocessor
+from project_name.preprocessing.baseline_preprocessing import BaselinePreprocessor
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV

@@ -6,11 +6,13 @@ from ekphrasis.classes.tokenizer import SocialTokenizer
 from ekphrasis.dicts.emoticons import emoticons
 import emoji
 from cleantext import clean
+from sklearn.preprocessing import LabelEncoder
 
 
 class MainPreprocessing():
     def __init__(self, test_data: bool = False):
         self.test_data = test_data
+        self.label_encoder = LabelEncoder()
         self.processor = TextPreProcessor(normalize=[
             'url', 'email', 'percent', 'money', 'phone', 'user',
             'time', 'date', 'number'], annotate={"hashtag", "allcaps",
@@ -19,8 +21,8 @@ class MainPreprocessing():
             segmenter="twitter",
             corrector="twitter", unpack_contractions=True,
             spell_correct_elong=True,
-            unpack_hashtags=True, dicts=[emoticons],
-            tokenizer=SocialTokenizer(lowercase=True).tokenize)
+            unpack_hashtags=True, dicts=[emoticons]) #,
+            #tokenizer=SocialTokenizer(lowercase=True).tokenize)
 
     def extract_features_labels(self, df: pd.DataFrame, feature_name: str,
                                 label_name: str) -> tuple[pd.DataFrame,
@@ -55,14 +57,19 @@ class MainPreprocessing():
         text = self.translate_emoji(text)
         text = text.replace(":", " ")
         text = text.replace("\\n", " ")
-        tokens = self.use_ekphrasis(text)
-        tokens = self.remove_punctuation(tokens)
-        tokens = [self.apply_clean_text(token) for token in tokens]
-        return tokens
+        text = self.use_ekphrasis(text)
+        #tokens = self.remove_punctuation(tokens)
+        text = self.apply_clean_text(text)
+        #tokens = [self.apply_clean_text(token) for token in tokens]
+        return text
 
-    def preprocess_df(self, df: pd.DataFrame):
+    def preprocess_df(self, df: pd.DataFrame, training=False):
         X, y = self.extract_features_labels(df, "tweet", "emotion")
         X = X.apply(self.clean_text)
+        if training:
+            y = self.label_encoder.fit_transform(y)
+        else:
+            y = self.label_encoder.transform(y)
         return X, y
 
     def preprocessing_pipeline(self):
@@ -78,7 +85,7 @@ class MainPreprocessing():
                                 orient="records", lines=True)
         test_data = pd.read_json(test_path,
                                  orient="records", lines=True)
-        X_training, y_training = self.preprocess_df(training_data)
+        X_training, y_training = self.preprocess_df(training_data, training=True)
         X_dev, y_dev = self.preprocess_df(dev_data)
         X_test, y_test = self.preprocess_df(test_data)
         return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
