@@ -18,9 +18,11 @@ pandas = "*"
 ekphrasis = "*"
 clean-text = "*"
 emoji = "==0.6.0"
-transformers = "*"
 unidecode = "*"
 torch = "*"
+transformers = "*"
+fastapi = {extras = ["standard"], version = "*"}
+uvicorn = "*"
 
 [dev-packages]
 
