@@ -16,7 +16,6 @@ class BaselinePreprocessor():
     def extract_features_labels(self, df: pd.DataFrame, feature_name: str,
                                 label_name: str
                                 ) -> tuple[pd.DataFrame, pd.DataFrame]:
-        # Add value error to check if allowed names are passed on
         X = df[feature_name]
         y = df[label_name]
         return X, y
@@ -27,7 +26,6 @@ class BaselinePreprocessor():
         text = text.lower()
         text = re.sub(r'@\w+', 'user', text)
         return text
-
     def vectorize(self, X: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
         if fit:
             vectorizer = TfidfVectorizer()
@@ -46,7 +44,6 @@ class BaselinePreprocessor():
         X = X.apply(self.clean_text)
         X_vec = self.vectorize(X, fit=fit)
         return X_vec, y
-
     def preprocess_df(self, df: pd.DataFrame):
         self.test_data = True
         X = df["tweet"]
@@ -87,10 +84,9 @@ class BaselinePreprocessor():
 
 if __name__ == "__main__":
     preprocessor = BaselinePreprocessor()
-    # ((X_training, y_training), (X_dev, y_dev),
-    # (X_test, y_test)) = preprocessor.preprocessing_pipeline()
-    ((X_training, y_training),
-     (X_test, y_test)) = preprocessor.preprocessing_pipeline()
+    (X_training, y_training), (X_dev, y_dev), (X_test, y_test) = preprocessor.preprocessing_pipeline()
+    (X_training, y_training), (X_test, y_test) = preprocessor.preprocessing_pipeline()
     print(X_training, y_training)
-    # print(X_dev, y_dev)
+    print(X_dev, y_dev)
+
     print(X_test, y_test)
