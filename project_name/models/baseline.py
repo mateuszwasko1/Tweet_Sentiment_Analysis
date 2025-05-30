@@ -1,4 +1,5 @@
 from project_name.preprocessing import BaselinePreprocessor
+from project_name.models.save_load_model import ModelSaver
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
 from sklearn.model_selection import GridSearchCV
@@ -25,15 +26,17 @@ class BaselineModel:
             "class_weight": [None, "balanced"]
         }
 
-        grid = GridSearchCV(LogisticRegression(), parameters, cv=ps)
-        grid.fit(X_combined, y_combined)
-
+        grid = GridSearchCV(LogisticRegression(), parameters, cv=5)
+        grid.fit(X_training, y_training)
+        print(grid.best_params_)
+        model_saver = ModelSaver()
+        model_saver.save_model(model=grid, file_name="baseline_model")
         grid_predictions = grid.predict(X_test)
         self.best_parameters = grid.best_params_
         return classification_report(y_test, grid_predictions)
 
     def pipeline(self):
         preprocesser_tfidf = BaselinePreprocessor()
-        data = preprocesser_tfidf.preprocessing_pipeline()
+        data = preprocesser_tfidf.preprocessing_pipeline(at_inference=False)
 
         return self.regression(data)
