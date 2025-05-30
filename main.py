@@ -111,5 +111,7 @@ async def predict(input_data: List[Input] = Body(...)):
 """
 if __name__ == '__main__':
     baseline = BaselineModel()
-    print(baseline.pipeline())
-"""
+    baseline_metrics =baseline.pipeline()
+    print(baseline.best_parameters)
+    print(baseline_metrics)
+
