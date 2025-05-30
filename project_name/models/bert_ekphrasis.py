@@ -7,6 +7,7 @@ from tqdm.auto import tqdm
 from torch.utils.data import DataLoader, TensorDataset
 import numpy as np
 from sklearn.metrics import accuracy_score, classification_report
+import joblib
 
 
 class BertModel:
@@ -25,6 +26,18 @@ class BertModel:
 
     def organize_data(self, data):
         (X_training, y_training), (X_dev, y_dev), (X_test, y_test) = data
+
+        # train_indices = X_training.sample(n=100, random_state=42).index
+        # X_training = X_training.loc[train_indices]
+        # y_training = y_training[train_indices]
+        
+        # dev_indices = X_dev.sample(n=30, random_state=42).index
+        # X_dev = X_dev.loc[dev_indices]
+        # y_dev = y_dev[dev_indices]
+        
+        # test_indices = X_test.sample(n=30, random_state=42).index
+        # X_test = X_test.loc[test_indices]
+        # y_test = y_test[test_indices]
 
         number_of_lables = len(np.unique(y_training))
 
@@ -104,9 +117,11 @@ class BertModel:
 
         return model
     
-    def saving_model(self, model): 
+    def saving_model(self, model, label_encoder): 
         model.save_pretrained("data/model/saved_bert/model")
         self.tokenizer.save_pretrained("data/model/saved_bert/model")
+        joblib.dump(label_encoder, "data/model/saved_bert/label_encoder")
+        
 
 
     def evaluation(self, model, X_train):
@@ -130,7 +145,8 @@ class BertModel:
         X_training, X_dev, X_test, number_of_lables  = self.organize_data(data)
         model = self.get_model(number_of_lables)
         best_model = self.model(model, X_training, X_dev, X_test)
-        self.saving_model(best_model)
+        label_encoder = ekphrasis_preprocessing.label_encoder
+        self.saving_model(best_model, label_encoder)
         metrics = self.evaluation(best_model, X_training)
         return metrics
 
