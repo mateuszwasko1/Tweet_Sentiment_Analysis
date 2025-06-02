@@ -2,7 +2,7 @@ import os
 import pandas as pd
 import string
 from ekphrasis.classes.preprocessor import TextPreProcessor
-from ekphrasis.classes.tokenizer import SocialTokenizer
+# from ekphrasis.classes.tokenizer import SocialTokenizer
 from ekphrasis.dicts.emoticons import emoticons
 import emoji
 from cleantext import clean
@@ -21,8 +21,8 @@ class MainPreprocessing():
             segmenter="twitter",
             corrector="twitter", unpack_contractions=True,
             spell_correct_elong=True,
-            unpack_hashtags=True, dicts=[emoticons]) #,
-            #tokenizer=SocialTokenizer(lowercase=True).tokenize)
+            unpack_hashtags=True, dicts=[emoticons])
+        # tokenizer=SocialTokenizer(lowercase=True).tokenize)
 
     def extract_features_labels(self, df: pd.DataFrame, feature_name: str,
                                 label_name: str) -> tuple[pd.DataFrame,
@@ -58,9 +58,9 @@ class MainPreprocessing():
         text = text.replace(":", " ")
         text = text.replace("\\n", " ")
         text = self.use_ekphrasis(text)
-        #tokens = self.remove_punctuation(tokens)
+        # tokens = self.remove_punctuation(tokens)
         text = self.apply_clean_text(text)
-        #tokens = [self.apply_clean_text(token) for token in tokens]
+        # tokens = [self.apply_clean_text(token) for token in tokens]
         return text
 
     def preprocess_df(self, df: pd.DataFrame, training=False):
@@ -85,7 +85,8 @@ class MainPreprocessing():
                                 orient="records", lines=True)
         test_data = pd.read_json(test_path,
                                  orient="records", lines=True)
-        X_training, y_training = self.preprocess_df(training_data, training=True)
+        X_training, y_training = self.preprocess_df(training_data,
+                                                    training=True)
         X_dev, y_dev = self.preprocess_df(dev_data)
         X_test, y_test = self.preprocess_df(test_data)
         return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
