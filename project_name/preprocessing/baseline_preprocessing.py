@@ -70,11 +70,9 @@ class BaselinePreprocessor():
             X_training, y_training = self.preprocess_training_df(pd.concat(
                 [training_data, dev_data]), fit=True)
             self.test_data = True
-            # Either delete line below or dont concat
-            # X_dev, y_dev = self.preprocess_df(dev_data)
+            X_dev, y_dev = self.preprocess_training_df(dev_data, fit=False)
             X_test, y_test = self.preprocess_training_df(test_data, fit=False)
-            # return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
-            return (X_training, y_training), (X_test, y_test)
+            return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
         else:
             if data is None:
                 raise ValueError("Data must be provided for inference.")
