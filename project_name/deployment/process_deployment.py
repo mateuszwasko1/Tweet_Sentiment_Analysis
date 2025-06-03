@@ -12,12 +12,10 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 app = FastAPI()
 
 
-# if __name__ == "__main__":
 def predict_emotion(text: str) -> str:
     model_loader = ModelSaver()
     model = model_loader.load_model("baseline_model")
     preprocessor = BaselinePreprocessor()
-    # string = "I love you"
     tweet = pd.DataFrame({"tweet": [text]})
     tweet_cleaned = preprocessor.preprocessing_pipeline(at_inference=True,
                                                         data=tweet)
