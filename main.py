@@ -3,14 +3,13 @@ from project_name.models.baseline import BaselineModel
 from project_name.models.prediction_bert_ekphrasis import PredictEkphrasisBert
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
-from project_name.deployment.process_deployment import predict_emotion
+from project_name.deployment.deployment import predict_emotion
 from starlette.responses import RedirectResponse
 from typing import List
 
 app = FastAPI(
     title="Logistic Regression Sentiment Analysis",
-    summary="An API endpoint to classify emotions of Tweets using Logistic "
-    "Regression",
+    summary="An API endpoint to classify emotions of Tweets using Logistic Regression",
     description="""
     ## API Usage
 
@@ -40,7 +39,7 @@ app = FastAPI(
 
     ### **Output format**
 
-    - The API returns a list of objects, each with the original input and the
+    - The API returns a list of objects, each with the original input and the 
     predicted emotion.
 
     #### Example response:
@@ -112,6 +111,7 @@ async def predict(input_data: List[Input] = Body(...)):
     return results
 
 
+"""
 if __name__ == '__main__':
     type_of_model = "Bert_p"
     if type_of_model == "Baseline":
@@ -122,18 +122,13 @@ if __name__ == '__main__':
         model.pipeline()
     elif type_of_model == "Bert_p":
         prediction = PredictEkphrasisBert()
-        number_of_predictions = int(input("How many predictions would you like\
-        to make?"))
-        if number_of_predictions <= 0:
-            raise ValueError("Number of predictions must be greater than 0.")
-        i = 0
-        while i < number_of_predictions:
-            i += 1
+        while 1==1:
             text = input("What text would you like predict?")
             label_class, prob = prediction.predict(text)
-            print(f"The predicted class is {label_class} with a probability of\
-                   {(prob*100):.2f}%.")
+            print(f"The predicted class is {label_class} with a probability of {(prob*100):.2f}%.")
     baseline = BaselineModel()
-    baseline_metrics = baseline.pipeline()
+    baseline_metrics =baseline.pipeline()
     print(baseline.best_parameters)
     print(baseline_metrics)
+
+"""

@@ -19,8 +19,7 @@ class ModelSaver():
         """Loads the model from a file."""
         file_path = os.path.join(self.path, file_name)
         if file_name not in os.listdir(self.path):
-            raise FileNotFoundError(f"Model file '{file_name}' not found in\
-                                    {self.path}.")
+            raise FileNotFoundError(f"Model file '{file_name}' not found in {self.path}.")
         with open(file_path, 'rb') as file:
             model = pickle.load(file)
         print(f"Model loaded from {file_path}")
