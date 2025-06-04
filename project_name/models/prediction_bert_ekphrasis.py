@@ -6,13 +6,15 @@ import torch.nn.functional as F
 
 class PredictEkphrasisBert():
     def __init__(self):
-        self.bert_model = AutoModelForSequenceClassification.from_pretrained("data/model/saved_bert_ekphrasis/model")
-        self.bert_tokenizer = AutoTokenizer.from_pretrained("data/model/saved_bert_ekphrasis/model")
-        self.label_encoder = joblib.load("data/model/saved_bert_ekphrasis/label_encoder")
+        #self.bert_model = AutoModelForSequenceClassification.from_pretrained("data/model/saved_bert_ekphrasis/model")
+        #self.bert_tokenizer = AutoTokenizer.from_pretrained("data/model/saved_bert_ekphrasis/model")
+        #self.label_encoder = joblib.load("data/model/saved_bert_ekphrasis/label_encoder")
+        pass
 
     def predict(self, text):
         preprocessing = MainPreprocessing()
-        preprocessed_text = preprocessing.clean_text(text)
+        preprocessed_text = preprocessing.clean_text(text, False)
+        """
         train_encodings = self.bert_tokenizer(
             preprocessed_text,
             truncation = True,
@@ -27,5 +29,5 @@ class PredictEkphrasisBert():
             prob_val, predicted_class = torch.max(probability, dim=1)
             predicted_label = self.label_encoder.inverse_transform([predicted_class.item()])[0]
             confidence = prob_val.item()
-
-        return(predicted_label, confidence)
+        """
+        return preprocessed_text #(predicted_label, confidence)
