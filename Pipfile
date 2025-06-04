@@ -16,13 +16,13 @@ jupyter = "*"
 ipykernel = "*"
 pandas = "*"
 ekphrasis = "*"
-emoji = "*"
+clean-text = "*"
+emoji = "==0.6.0"
 unidecode = "*"
 torch = "*"
 transformers = "*"
 fastapi = {extras = ["standard"], version = "*"}
 uvicorn = "*"
-clean-text = ">=0.6.0"
 
 [dev-packages]
 
