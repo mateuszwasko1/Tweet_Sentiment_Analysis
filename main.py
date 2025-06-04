@@ -6,7 +6,7 @@ from pydantic import BaseModel
 from project_name.deployment.deployment import predict_emotion
 from starlette.responses import RedirectResponse
 from typing import List
-
+'''
 app = FastAPI(
     title="Logistic Regression Sentiment Analysis",
     summary="An API endpoint to classify emotions of Tweets using Logistic Regression",
@@ -111,7 +111,7 @@ async def predict(input_data: List[Input] = Body(...)):
     return results
 
 
-"""
+'''
 if __name__ == '__main__':
     type_of_model = "Bert_p"
     if type_of_model == "Baseline":
@@ -124,11 +124,8 @@ if __name__ == '__main__':
         prediction = PredictEkphrasisBert()
         while 1==1:
             text = input("What text would you like predict?")
-            label_class, prob = prediction.predict(text)
-            print(f"The predicted class is {label_class} with a probability of {(prob*100):.2f}%.")
-    baseline = BaselineModel()
-    baseline_metrics =baseline.pipeline()
-    print(baseline.best_parameters)
-    print(baseline_metrics)
+            #label_class, prob = prediction.predict(text)
+            #print(f"The predicted class is {label_class} with a probability of {(prob*100):.2f}%.")
+            print(prediction.predict(text))
 
-"""
+

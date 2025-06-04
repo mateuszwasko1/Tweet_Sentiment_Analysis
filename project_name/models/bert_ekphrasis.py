@@ -14,7 +14,7 @@ import joblib
 class BertModel:
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained(
-            "vinai/bertweet-base",
+            "roberta-base",
             use_fast=False)
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
@@ -61,7 +61,7 @@ class BertModel:
         X_test = TensorDataset(
             X_test["input_ids"], X_test["attention_mask"], y_test)
 
-        batch_size = 128
+        batch_size = 16
         X_training = DataLoader(
             X_training, batch_size=batch_size, shuffle=True)
         X_dev = DataLoader(X_dev, batch_size=batch_size)
@@ -73,8 +73,8 @@ class BertModel:
         config = AutoConfig.from_pretrained(
             model_name,
             num_labels=number_of_labels,
-            hidden_dropout_prob=0.2,
-            attention_probs_dropout_prob=0.2)
+            hidden_dropout_prob=0.3,
+            attention_probs_dropout_prob=0.3)
         model = AutoModelForSequenceClassification.from_pretrained(
             model_name,
             config=config)
@@ -82,7 +82,7 @@ class BertModel:
         return model
 
     def model(self, model, X_training, X_dev, X_test, early_stopping=True):
-        optimizer = AdamW(model.parameters(), lr=5e-6, weight_decay=0.01)
+        optimizer = AdamW(model.parameters(), lr=5e-5, weight_decay=0.05)
         EPOCHS = 15
 
         if early_stopping:
@@ -205,9 +205,9 @@ class BertModel:
     def pipeline(self):
         ekphrasis_preprocessing = MainPreprocessing()
         data = ekphrasis_preprocessing.preprocessing_pipeline(
-            ekphrasis_preprocessing=True)
+            ekphrasis_preprocessing=False)
         X_training, X_dev, X_test, number_of_labels = self.organize_data(data)
-        model = self.get_model(number_of_labels, "vinai/bertweet-base")
+        model = self.get_model(number_of_labels, "roberta-base")
         best_model = self.model(model, X_training, X_dev, X_test)
         label_encoder = ekphrasis_preprocessing.label_encoder
         self.saving_model(
