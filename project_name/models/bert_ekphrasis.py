@@ -13,11 +13,8 @@ import joblib
 
 class BertModel:
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            "vinai/bertweet-base",
-            use_fast=False)
-        self.device = torch.device(
-            "cuda" if torch.cuda.is_available() else "cpu")
+        self.tokenizer = AutoTokenizer.from_pretrained("vinai/bertweet-base",
+                                                       use_fast=False)
 
     def tokenization(self, X):
         train_encodings = self.tokenizer(
@@ -44,7 +41,7 @@ class BertModel:
         # X_test = X_test.loc[test_indices]
         # y_test = y_test[test_indices]
 
-        number_of_lables = len(np.unique(y_training))
+        number_of_labels = len(np.unique(y_training))
 
         X_training = self.tokenization(X_training)
         X_dev = self.tokenization(X_dev)
@@ -54,31 +51,24 @@ class BertModel:
         y_dev = torch.tensor(y_dev, dtype=torch.long)
         y_test = torch.tensor(y_test, dtype=torch.long)
 
-        X_training = TensorDataset(
-            X_training["input_ids"], X_training["attention_mask"], y_training)
-        X_dev = TensorDataset(
-            X_dev["input_ids"], X_dev["attention_mask"], y_dev)
-        X_test = TensorDataset(
-            X_test["input_ids"], X_test["attention_mask"], y_test)
+        X_training = TensorDataset(X_training["input_ids"],
+                                   X_training["attention_mask"], y_training)
+        X_dev = TensorDataset(X_dev["input_ids"], X_dev["attention_mask"],
+                              y_dev)
+        X_test = TensorDataset(X_test["input_ids"], X_test["attention_mask"],
+                               y_test)
 
-        batch_size = 128
-        X_training = DataLoader(
-            X_training, batch_size=batch_size, shuffle=True)
+        batch_size = 32
+        X_training = DataLoader(X_training, batch_size=batch_size,
+                                shuffle=True)
         X_dev = DataLoader(X_dev, batch_size=batch_size)
         X_test = DataLoader(X_test, batch_size=batch_size)
 
-        return X_training, X_dev, X_test, number_of_lables  # CHANGE NAMES
+        return X_training, X_dev, X_test, number_of_labels  # CHANGE NAMES
 
-    def get_model(self, number_of_labels, model_name):
-        config = AutoConfig.from_pretrained(
-            model_name,
-            num_labels=number_of_labels,
-            hidden_dropout_prob=0.2,
-            attention_probs_dropout_prob=0.2)
+    def get_model(self, number_of_labels):
         model = AutoModelForSequenceClassification.from_pretrained(
-            model_name,
-            config=config)
-        model.to(self.device)
+            "vinai/bertweet-base", num_labels=number_of_labels)
         return model
 
     def model(self, model, X_training, X_dev, X_test, early_stopping=True):
@@ -95,21 +85,12 @@ class BertModel:
             model.train()
             total_loss = 0
 
-            train_correct = 0
-            train_total = 0
+            for input_ids, attention_mask, labels in tqdm(X_training,
+                                                          desc=f"Epoch \
+                                                          {epoch+1}/{EPOCHS}"):
 
-            for input_ids, attention_mask, labels in tqdm(
-                    X_training,
-                    desc=f"Epoch {epoch+1}/{EPOCHS}"):
-
-                input_ids = input_ids.to(self.device)
-                attention_mask = attention_mask.to(self.device)
-                labels = labels.to(self.device)
-
-                output = model(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    labels=labels)
+                output = model(input_ids=input_ids,
+                               attention_mask=attention_mask, labels=labels)
                 loss = output.loss
                 logits = output.logits
 
@@ -119,41 +100,22 @@ class BertModel:
 
                 total_loss += loss.item()
 
-                predictions = logits.argmax(dim=1)
-                train_correct += (predictions == labels).sum().item()
-                train_total += labels.size(0)
-
             print(f"Epoch {epoch+1}: train loss =\
                   {total_loss/len(X_training):.4f}")
-            print(f"Epoch {epoch+1}: train accuracy =\
-                  {((train_correct/train_total)*100):.2f}%")
 
             model.eval()
             validation_loss = 0
             correct, total = 0, 0
             with torch.no_grad():
                 for input_ids, attention_mask, labels in X_dev:
-
-                    input_ids = input_ids.to(self.device)
-                    attention_mask = attention_mask.to(self.device)
-                    labels = labels.to(self.device)
-
-                    output = model(
-                        input_ids=input_ids,
-                        attention_mask=attention_mask,
-                        labels=labels)
-                    logits = output.logits
-                    loss = output.loss
-
-                    validation_loss += loss.item()
+                    logits = model(input_ids=input_ids,
+                                   attention_mask=attention_mask,
+                                   labels=labels).logits
                     preds = logits.argmax(dim=1)
                     correct += (preds == labels).sum().item()
                     total += labels.size(0)
             val_accuracy = correct/total
-            print(f"Epoch {epoch+1}: dev accuracy =\
-                  {(val_accuracy*100):.2f}%")    
-            print(f"Epoch {epoch+1}: val loss =\
-                  {(validation_loss/len(X_dev)):.4f}")              
+            print(f"Epoch {epoch+1}: dev accuracy = {correct/total:.2%}")
 
             if val_accuracy > best_val_accuracy:
                 best_val_accuracy = val_accuracy
@@ -170,14 +132,10 @@ class BertModel:
 
         return model
 
-    def saving_model(
-            self,
-            model,
-            label_encoder,
-            directory="data/model/saved_bert/"):
-        model.save_pretrained(f"{directory}model")
-        self.tokenizer.save_pretrained(f"{directory}model")
-        joblib.dump(label_encoder, f"{directory}label_encoder")
+    def saving_model(self, model, label_encoder):
+        model.save_pretrained("data/model/saved_bert/model")
+        self.tokenizer.save_pretrained("data/model/saved_bert/model")
+        joblib.dump(label_encoder, "data/model/saved_bert/label_encoder")
 
     def evaluation(self, model, X_test):
         model.eval()
@@ -185,16 +143,10 @@ class BertModel:
         all_lables = []
 
         with torch.no_grad():
-            for input_ids, attention_mask, labels in X_test:
-
-                input_ids = input_ids.to(self.device)
-                attention_mask = attention_mask.to(self.device)
-                labels = labels.to(self.device)
-
-                logits = model(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask,
-                    labels=labels).logits
+            for input_ids, attention_mask, labels in X_train:
+                logits = model(input_ids=input_ids,
+                               attention_mask=attention_mask,
+                               labels=labels).logits
                 preds = logits.argmax(dim=1)
                 all_predictions.extend(preds.tolist())
                 all_lables.extend(labels.tolist())
@@ -204,10 +156,9 @@ class BertModel:
 
     def pipeline(self):
         ekphrasis_preprocessing = MainPreprocessing()
-        data = ekphrasis_preprocessing.preprocessing_pipeline(
-            ekphrasis_preprocessing=True)
+        data = ekphrasis_preprocessing.preprocessing_pipeline()
         X_training, X_dev, X_test, number_of_labels = self.organize_data(data)
-        model = self.get_model(number_of_labels, "vinai/bertweet-base")
+        model = self.get_model(number_of_labels)
         best_model = self.model(model, X_training, X_dev, X_test)
         label_encoder = ekphrasis_preprocessing.label_encoder
         self.saving_model(
@@ -216,4 +167,3 @@ class BertModel:
             directory="data/model/saved_bert/")
         metrics = self.evaluation(best_model, X_test)
         return metrics
-
