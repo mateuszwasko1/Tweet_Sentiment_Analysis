@@ -37,6 +37,4 @@ class PredictEkphrasisBert():
                 [predicted_class.item()])[0]
             confidence = prob_val.item()
 
-        # return preprocessed_text #(predicted_label, confidence)
-
         return (predicted_label, confidence)

@@ -130,8 +130,8 @@ if __name__ == '__main__':
         while i < number_of_predictions:
             i += 1
             text = input("What text would you like predict?")
-            #label_class, prob = prediction.predict(text)
-            #print(f"The predicted class is {label_class} with a probability of {(prob*100):.2f}%.")
-            print(prediction.predict(text))
+            label_class, prob = prediction.predict(text)
+            print(f"The predicted class is {label_class} with a probability of {(prob*100):.2f}%.")
+            #print(prediction.predict(text))
 
 
