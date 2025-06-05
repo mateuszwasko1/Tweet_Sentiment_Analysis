@@ -59,7 +59,7 @@ class MainPreprocessing():
                                token not in punctuation]
         return without_punctuation
 
-    def remove_stopwords(self, text:str) -> str:
+    def remove_stopwords(self, text: str) -> str:
         stop_words = set(stopwords.words('english'))
         words = text.split()
         filtered_words = [word for word in words if word.lower() not in stop_words]
@@ -71,14 +71,14 @@ class MainPreprocessing():
             ekphrasis_preprocessing: bool) -> str:
         text = text.lower()
         text = BeautifulSoup(text, "lxml").get_text()
-        #text = re.sub(r"http\S+", "", text)
+        # text = re.sub(r"http\S+", "", text)
         text = re.sub(r"@\w+", "", text)
         text = re.sub(r"#", "", text)
         # text = text.replace(":", " ")
         # text = text.replace("\\n", " ")
         text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
-        #text = self.remove_stopwords(text)
+        # text = self.remove_stopwords(text)
         if ekphrasis_preprocessing:
             # text = self.translate_emoji(text)
             text = self.use_ekphrasis(text)
@@ -86,7 +86,7 @@ class MainPreprocessing():
             text = self.apply_clean_text(text)
         return text
 
-    def preprocess_df(
+    def preprocess_training_df(
             self,
             df: pd.DataFrame,
             ekphrasis_preprocessing: bool,
@@ -99,6 +99,15 @@ class MainPreprocessing():
         else:
             y = self.label_encoder.transform(y)
         return X, y
+
+    def preprocess_df(
+            self,
+            df: pd.DataFrame,
+            ekphrasis_preprocessing: bool):
+        X = df["tweet"]
+        X = X.apply(lambda text: self.clean_text(text,
+                                                 ekphrasis_preprocessing))
+        return X
 
     def preprocessing_pipeline(self, at_inference: bool = False, data=None):
         self.at_inference = at_inference
@@ -116,17 +125,17 @@ class MainPreprocessing():
                                     orient="records", lines=True)
             test_data = pd.read_json(test_path,
                                      orient="records", lines=True)
-            X_training, y_training = self.preprocess_df(training_data,
-                                                        training=True)
-            X_dev, y_dev = self.preprocess_df(dev_data)
-            X_test, y_test = self.preprocess_df(test_data)
+            X_training, y_training = self.preprocess_training_df(
+                training_data, training=True)
+            X_dev, y_dev = self.preprocess_training_df(dev_data)
+            X_test, y_test = self.preprocess_training_df(test_data)
             return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
         else:
             if data is None:
                 raise ValueError("Data must be provided for inference.")
             if not isinstance(data, pd.DataFrame):
                 raise TypeError("Data must be a pandas DataFrame.")
-            preprocessed_df = self.clean_text(data, False)
+            preprocessed_df = self.preprocess_df(data, False)
             return preprocessed_df
 
 
