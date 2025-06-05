@@ -72,8 +72,8 @@ class MainPreprocessing():
         text = re.sub(r"http\S+", "", text)
         text = re.sub(r"@\w+", "", text)
         text = re.sub(r"#", "", text)
-        #text = text.replace(":", " ")
-        #text = text.replace("\\n", " ")
+        # text = text.replace(":", " ")
+        # text = text.replace("\\n", " ")
         text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
         text = self.remove_stopwords(text)
@@ -98,24 +98,34 @@ class MainPreprocessing():
             y = self.label_encoder.transform(y)
         return X, y
 
-    def preprocessing_pipeline(self, ekphrasis_preprocessing=True):
-        script_dir = os.path.dirname(os.path.abspath(__file__))
-        train_path = os.path.join(script_dir, "..", "..", "data", "raw",
-                                  "training_merged.json")
-        dev_path = os.path.join(script_dir, "..", "..", "data", "raw",
-                                "development_merged.json")
-        test_path = os.path.join(script_dir, "..", "..", "data", "raw",
-                                 "test-gold_merged.json")
-        training_data = pd.read_json(train_path, orient="records", lines=True)
-        dev_data = pd.read_json(dev_path,
-                                orient="records", lines=True)
-        test_data = pd.read_json(test_path,
-                                 orient="records", lines=True)
-        X_training, y_training = self.preprocess_df(training_data,
-                                                    training=True)
-        X_dev, y_dev = self.preprocess_df(dev_data)
-        X_test, y_test = self.preprocess_df(test_data)
-        return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
+    def preprocessing_pipeline(self, at_inference: bool = False, data=None):
+        self.at_inference = at_inference
+        if at_inference is False:
+            script_dir = os.path.dirname(os.path.abspath(__file__))
+            train_path = os.path.join(script_dir, "..", "..", "data", "raw",
+                                      "training_merged.json")
+            dev_path = os.path.join(script_dir, "..", "..", "data", "raw",
+                                    "development_merged.json")
+            test_path = os.path.join(script_dir, "..", "..", "data", "raw",
+                                     "test-gold_merged.json")
+            training_data = pd.read_json(train_path, orient="records",
+                                         lines=True)
+            dev_data = pd.read_json(dev_path,
+                                    orient="records", lines=True)
+            test_data = pd.read_json(test_path,
+                                     orient="records", lines=True)
+            X_training, y_training = self.preprocess_df(training_data,
+                                                        training=True)
+            X_dev, y_dev = self.preprocess_df(dev_data)
+            X_test, y_test = self.preprocess_df(test_data)
+            return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
+        else:
+            if data is None:
+                raise ValueError("Data must be provided for inference.")
+            if not isinstance(data, pd.DataFrame):
+                raise TypeError("Data must be a pandas DataFrame.")
+            preprocessed_df = self.clean_text(data, False)
+            return preprocessed_df
 
 
 if __name__ == "__main__":

@@ -26,6 +26,7 @@ class BaselinePreprocessor():
         text = text.lower()
         text = re.sub(r'@\w+', 'user', text)
         return text
+
     def vectorize(self, X: pd.DataFrame, fit: bool = True) -> pd.DataFrame:
         if fit:
             vectorizer = TfidfVectorizer()
@@ -44,6 +45,7 @@ class BaselinePreprocessor():
         X = X.apply(self.clean_text)
         X_vec = self.vectorize(X, fit=fit)
         return X_vec, y
+
     def preprocess_df(self, df: pd.DataFrame):
         self.test_data = True
         X = df["tweet"]
