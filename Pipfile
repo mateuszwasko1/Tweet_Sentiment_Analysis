@@ -16,8 +16,7 @@ jupyter = "*"
 ipykernel = "*"
 pandas = "*"
 ekphrasis = "*"
-clean-text = "*"
-emoji = "==0.6.0"
+emoji = "*"
 unidecode = "*"
 torch = "*"
 transformers = "*"
@@ -26,6 +25,7 @@ uvicorn = "*"
 bs4 = "*"
 lxml = "*"
 nltk = "*"
+clean-text = ">=0.6.0"
 
 [dev-packages]
 
