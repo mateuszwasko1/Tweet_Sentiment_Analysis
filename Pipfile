@@ -22,6 +22,9 @@ torch = "*"
 transformers = "*"
 fastapi = {extras = ["standard"], version = "*"}
 uvicorn = "*"
+bs4 = "*"
+lxml = "*"
+nltk = "*"
 clean-text = ">=0.6.0"
 
 [dev-packages]

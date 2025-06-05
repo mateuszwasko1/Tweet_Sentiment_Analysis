@@ -13,8 +13,12 @@ import joblib
 
 class BertModel:
     def __init__(self):
-        self.tokenizer = AutoTokenizer.from_pretrained("vinai/bertweet-base",
-                                                       use_fast=False)
+
+        self.tokenizer = AutoTokenizer.from_pretrained(
+            "roberta-base",
+            use_fast=False)
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu")
 
     def tokenization(self, X):
         train_encodings = self.tokenizer(
@@ -58,21 +62,28 @@ class BertModel:
         X_test = TensorDataset(X_test["input_ids"], X_test["attention_mask"],
                                y_test)
 
-        batch_size = 32
-        X_training = DataLoader(X_training, batch_size=batch_size,
-                                shuffle=True)
+        batch_size = 16
+        X_training = DataLoader(
+            X_training, batch_size=batch_size, shuffle=True)
         X_dev = DataLoader(X_dev, batch_size=batch_size)
         X_test = DataLoader(X_test, batch_size=batch_size)
 
         return X_training, X_dev, X_test, number_of_labels  # CHANGE NAMES
 
-    def get_model(self, number_of_labels):
+
+    def get_model(self, number_of_labels, model_name):
+        config = AutoConfig.from_pretrained(
+            model_name,
+            num_labels=number_of_labels,
+            hidden_dropout_prob=0.3,
+            attention_probs_dropout_prob=0.3)
+
         model = AutoModelForSequenceClassification.from_pretrained(
             "vinai/bertweet-base", num_labels=number_of_labels)
         return model
 
     def model(self, model, X_training, X_dev, X_test, early_stopping=True):
-        optimizer = AdamW(model.parameters(), lr=5e-6, weight_decay=0.01)
+        optimizer = AdamW(model.parameters(), lr=5e-5, weight_decay=0.05)
         EPOCHS = 15
 
         if early_stopping:
@@ -156,9 +167,11 @@ class BertModel:
 
     def pipeline(self):
         ekphrasis_preprocessing = MainPreprocessing()
-        data = ekphrasis_preprocessing.preprocessing_pipeline()
+        data = ekphrasis_preprocessing.preprocessing_pipeline(
+            ekphrasis_preprocessing=False)
         X_training, X_dev, X_test, number_of_labels = self.organize_data(data)
-        model = self.get_model(number_of_labels)
+        model = self.get_model(number_of_labels, "roberta-base")
+
         best_model = self.model(model, X_training, X_dev, X_test)
         label_encoder = ekphrasis_preprocessing.label_encoder
         self.saving_model(
