@@ -7,15 +7,18 @@ from ekphrasis.dicts.emoticons import emoticons
 import emoji
 from cleantext import clean
 from sklearn.preprocessing import LabelEncoder
-from nltk.corpus import stopwords
 from bs4 import BeautifulSoup
 import re
+import nltk
+from nltk.corpus import stopwords
+nltk.download('stopwords')
 
 
 class MainPreprocessing():
     def __init__(self, test_data: bool = False):
         self.test_data = test_data
         self.label_encoder = LabelEncoder()
+        '''
         self.processor = TextPreProcessor(normalize=[
             'url', 'email', 'percent', 'money', 'phone', 'user',
             'time', 'date', 'number'], annotate={"hashtag", "allcaps",
@@ -25,7 +28,7 @@ class MainPreprocessing():
             corrector="twitter", unpack_contractions=True,
             spell_correct_elong=True,
             unpack_hashtags=True, dicts=[emoticons])
-        # tokenizer=SocialTokenizer(lowercase=True).tokenize)
+        '''
 
     def extract_features_labels(self, df: pd.DataFrame, feature_name: str,
                                 label_name: str) -> tuple[pd.DataFrame,
@@ -57,7 +60,6 @@ class MainPreprocessing():
         return without_punctuation
 
     def remove_stopwords(self, text:str) -> str:
-        nltk.download('stopwords')
         stop_words = set(stopwords.words('english'))
         words = text.split()
         filtered_words = [word for word in words if word.lower() not in stop_words]
@@ -69,14 +71,14 @@ class MainPreprocessing():
             ekphrasis_preprocessing: bool) -> str:
         text = text.lower()
         text = BeautifulSoup(text, "lxml").get_text()
-        text = re.sub(r"http\S+", "", text)
+        #text = re.sub(r"http\S+", "", text)
         text = re.sub(r"@\w+", "", text)
         text = re.sub(r"#", "", text)
         #text = text.replace(":", " ")
         #text = text.replace("\\n", " ")
         text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
-        text = self.remove_stopwords(text)
+        #text = self.remove_stopwords(text)
         if ekphrasis_preprocessing:
             # text = self.translate_emoji(text)
             text = self.use_ekphrasis(text)
