@@ -18,7 +18,8 @@ class PredictEkphrasisBert():
 
     def predict(self, text):
         preprocessing = MainPreprocessing()
-        preprocessed_text = preprocessing.clean_text(text)
+        preprocessed_text = preprocessing.clean_text(text, False)
+        """
         train_encodings = self.bert_tokenizer(
             preprocessed_text,
             truncation=True,
@@ -34,5 +35,7 @@ class PredictEkphrasisBert():
             predicted_label = self.label_encoder.inverse_transform(
                 [predicted_class.item()])[0]
             confidence = prob_val.item()
+        """
+        return preprocessed_text #(predicted_label, confidence)
 
         return (predicted_label, confidence)
