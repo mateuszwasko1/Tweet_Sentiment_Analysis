@@ -71,7 +71,7 @@ class PredictEmotion():
 
 
 if __name__ == "__main__":
-    predictor = PredictEmotion(baseline=True)
+    predictor = PredictEmotion(baseline=False)
     text = "I am happy"
     prediction, confidence = predictor.output_emotion(text)
     print(f"Prediction: {prediction}, Confidence: {confidence:.2f}")
