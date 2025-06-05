@@ -1,4 +1,4 @@
-from project_name.models.bert_ekphrasis import BertModel
+from project_name.models.bert_model import BertModel
 from project_name.models.baseline import BaselineModel
 from project_name.models.prediction_bert_ekphrasis import PredictEkphrasisBert
 from fastapi import FastAPI, HTTPException, Body

@@ -1,4 +1,4 @@
-from project_name.preprocessing.ekphrasis_preprocessing import (
+from project_name.preprocessing.bert_preprocessing import (
     MainPreprocessing)
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
