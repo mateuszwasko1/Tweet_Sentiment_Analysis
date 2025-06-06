@@ -77,6 +77,7 @@ class BaselinePreprocessor():
             if data is None:
                 raise ValueError("Data must be provided for inference.")
             data = pd.DataFrame({"tweet": [data]})
+
             if not isinstance(data, pd.DataFrame):
                 raise TypeError("Data must be a pandas DataFrame.")
             preprocessed_df = self.preprocess_df(data)
