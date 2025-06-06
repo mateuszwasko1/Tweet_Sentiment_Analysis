@@ -33,4 +33,13 @@ Note that the code below can also install the exact versions from Pipfile.lock
 # to activate the python environment
    pipenv sync
 ```
+# STARTING THE STREAMLIT
+Make sure that you run the FastAPI file beforehand on one terminal: 
+```bash
+    uvicorn project_name.deployment.fastAPI:app --reload
+```
+Then, on a separate terminal, run the streamlit app:
+```bash
+    streamlit run project_name/demo.py
+```
 
