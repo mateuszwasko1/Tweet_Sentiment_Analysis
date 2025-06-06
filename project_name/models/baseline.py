@@ -43,7 +43,7 @@ class BaselineModel():
         parameters = {
             "C": [0.001, 0.01, 0.1, 1, 10, 20],
             "penalty": ["l1", "l2"],
-            "solver": ["liblinear"],
+            "solver": ["lbfgs", "saga"],
             "max_iter": [500, 1000, 2000],
             "class_weight": [None, "balanced"]
         }
@@ -112,4 +112,4 @@ class BaselineModel():
 
 if __name__ == "__main__":
     baseline_model = BaselineModel()
-    baseline_model.pipeline(training=False)
+    baseline_model.pipeline(training=True)

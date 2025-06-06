@@ -4,14 +4,14 @@ from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
 import joblib
 import torch.nn.functional as F
+from fastapi import FastAPI
 
 
 class PredictEkphrasisBert():
     def __init__(self):
-
         bert_model_path = "models/saved_bert/model"
-        bert_label_encoder_path = "models/saved_bert/label_encoder"
-    
+        bert_label_encoder_path = "models/saved_bert/" \
+                                  "label_encoder"
         self.bert_model = AutoModelForSequenceClassification.from_pretrained(
             bert_model_path)
         self.bert_tokenizer = AutoTokenizer.from_pretrained(bert_model_path)
@@ -20,7 +20,7 @@ class PredictEkphrasisBert():
     def predict(self, text):
         preprocessing = MainPreprocessing()
         preprocessed_text = preprocessing.clean_text(text, False)
-        
+
         train_encodings = self.bert_tokenizer(
             preprocessed_text,
             truncation=True,
