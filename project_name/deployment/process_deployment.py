@@ -61,17 +61,20 @@ class PredictEmotion():
             return str(predicted_label), confidence
 
     def output_emotion(self, text: str) -> str:
-        tweet = pd.DataFrame({"tweet": [text]})
         tweet_cleaned = self.preprocessor.preprocessing_pipeline(
-            at_inference=True, data=tweet)
-        prediction, confidence = self.predict(tweet_cleaned)
+            at_inference=True, data=text)
+        if hasattr(tweet_cleaned, "iloc"):
+            cleaned_text = tweet_cleaned.iloc[0]
+        else:
+            cleaned_text = tweet_cleaned
+        prediction, confidence = self.predict(cleaned_text)
         if isinstance(prediction, (np.ndarray, list)):
             return str(prediction[0]), float(round(confidence, 2))
         return str(prediction), float(round(confidence, 2))
 
 
 if __name__ == "__main__":
-    predictor = PredictEmotion(baseline=False)
+    predictor = PredictEmotion(baseline=True)
     text = "I am happy"
     prediction, confidence = predictor.output_emotion(text)
     print(f"Prediction: {prediction}, Confidence: {confidence:.2f}")
