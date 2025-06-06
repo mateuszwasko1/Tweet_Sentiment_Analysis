@@ -1,9 +1,5 @@
 import os
 import pandas as pd
-import string
-from ekphrasis.classes.preprocessor import TextPreProcessor
-from ekphrasis.classes.tokenizer import SocialTokenizer
-from ekphrasis.dicts.emoticons import emoticons
 import emoji
 from cleantext import clean
 from sklearn.preprocessing import LabelEncoder
@@ -11,24 +7,12 @@ from bs4 import BeautifulSoup
 import re
 import nltk
 from nltk.corpus import stopwords
-nltk.download('stopwords')
 
 
 class MainPreprocessing():
-    def __init__(self, test_data: bool = False):
-        self.test_data = test_data
+    def __init__(self):
         self.label_encoder = LabelEncoder()
-        '''
-        self.processor = TextPreProcessor(normalize=[
-            'url', 'email', 'percent', 'money', 'phone', 'user',
-            'time', 'date', 'number'], annotate={"hashtag", "allcaps",
-                                                 "elongated", "repeated",
-                                                 'emphasis', 'censored'},
-            segmenter="twitter",
-            corrector="twitter", unpack_contractions=True,
-            spell_correct_elong=True,
-            unpack_hashtags=True, dicts=[emoticons])
-        '''
+        nltk.download('stopwords')
 
     def extract_features_labels(self, df: pd.DataFrame, feature_name: str,
                                 label_name: str) -> tuple[pd.DataFrame,
@@ -47,66 +31,40 @@ class MainPreprocessing():
             keep_two_line_breaks=False,
             )
 
-    def use_ekphrasis(self, text: str) -> str:
-        return self.processor.pre_process_doc(text)
-
     def translate_emoji(self, text: str) -> str:
         return emoji.demojize(text)
-
-    def remove_punctuation(self, tokens: list[str]) -> str:
-        punctuation = set(string.punctuation) - {"!"} - {"?"}
-        without_punctuation = [token for token in tokens if
-                               token not in punctuation]
-        return without_punctuation
 
     def remove_stopwords(self, text: str) -> str:
         stop_words = set(stopwords.words('english'))
         words = text.split()
-        filtered_words = [word for word in words if word.lower() not in stop_words]
+        filtered_words = [
+            word for word in words if word.lower() not in stop_words]
         return " ".join(filtered_words)
 
-    def clean_text(
-            self,
-            text: str,
-            ekphrasis_preprocessing: bool) -> str:
+    def clean_text(self, text: str,) -> str:
+        text = self.translate_emoji(text)
         text = text.lower()
         text = BeautifulSoup(text, "lxml").get_text()
-        # text = re.sub(r"http\S+", "", text)
         text = re.sub(r"@\w+", "", text)
         text = re.sub(r"#", "", text)
-        # text = text.replace(":", " ")
-        # text = text.replace("\\n", " ")
         text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
-        # text = self.remove_stopwords(text)
-        if ekphrasis_preprocessing:
-            # text = self.translate_emoji(text)
-            text = self.use_ekphrasis(text)
-            # tokens = self.remove_punctuation(tokens)
-            text = self.apply_clean_text(text)
+        text = self.remove_stopwords(text)
+        text = self.apply_clean_text(text)
         return text
 
-    def preprocess_training_df(
-            self,
-            df: pd.DataFrame,
-            ekphrasis_preprocessing: bool,
-            training=False):
+    def preprocess_training_df(self, df: pd.DataFrame, training=False):
         X, y = self.extract_features_labels(df, "tweet", "emotion")
-        X = X.apply(lambda text: self.clean_text(text,
-                                                 ekphrasis_preprocessing))
+        X = X.apply(lambda text: self.clean_text(text))
         if training:
             y = self.label_encoder.fit_transform(y)
         else:
             y = self.label_encoder.transform(y)
         return X, y
 
-    def preprocess_df(
-            self,
-            df: pd.DataFrame,
-            ekphrasis_preprocessing: bool):
+    def preprocess_df(self, df: pd.DataFrame):
         X = df["tweet"]
-        X = X.apply(lambda text: self.clean_text(text,
-                                                 ekphrasis_preprocessing))
+        X = X.apply(lambda text: self.clean_text(text))
         return X
 
     def preprocessing_pipeline(self, at_inference: bool = False, data=None):
@@ -133,9 +91,10 @@ class MainPreprocessing():
         else:
             if data is None:
                 raise ValueError("Data must be provided for inference.")
+            data = pd.DataFrame({"tweet": [data]})
             if not isinstance(data, pd.DataFrame):
                 raise TypeError("Data must be a pandas DataFrame.")
-            preprocessed_df = self.preprocess_df(data, False)
+            preprocessed_df = self.preprocess_df(data)
             return preprocessed_df
 
 

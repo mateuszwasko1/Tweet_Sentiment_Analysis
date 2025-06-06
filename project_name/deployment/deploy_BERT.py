@@ -1,10 +1,12 @@
+import sys
+import os
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
 from project_name.deployment.process_deployment import PredictEmotion
 from starlette.responses import RedirectResponse
 from typing import List
 
-predictor = PredictEmotion(baseline=False)
+predictor = PredictEmotion(baseline=True)
 
 app = FastAPI(
     title="Logistic Regression Sentiment Analysis",
@@ -108,5 +110,6 @@ async def predict(input_data: List[Input] = Body(...)):
             emotion, confidence = predictor.output_emotion(item.text)
         except Exception:
             raise HTTPException(status_code=422, detail="validation error")
-        results.append(Prediction(input=item.text, prediction=emotion, confidence=confidence))
+        results.append(Prediction(input=item.text, prediction=emotion,
+                                  confidence=confidence))
     return results
