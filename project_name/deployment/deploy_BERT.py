@@ -1,15 +1,17 @@
-from project_name.models.bert_ekphrasis import BertModel
-from project_name.models.baseline import BaselineModel
-from project_name.models.prediction_bert_ekphrasis import PredictEkphrasisBert
+import sys
+import os
 from fastapi import FastAPI, HTTPException, Body
 from pydantic import BaseModel
-from project_name.deployment.process_deployment import predict_emotion
+from project_name.deployment.process_deployment import PredictEmotion
 from starlette.responses import RedirectResponse
 from typing import List
-'''
+
+predictor = PredictEmotion(baseline=True)
+
 app = FastAPI(
     title="Logistic Regression Sentiment Analysis",
-    summary="An API endpoint to classify emotions of Tweets using Logistic Regression",
+    summary="An API endpoint to classify emotions of Tweets using Logistic "
+    "Regression",
     description="""
     ## API Usage
 
@@ -39,7 +41,7 @@ app = FastAPI(
 
     ### **Output format**
 
-    - The API returns a list of objects, each with the original input and the 
+    - The API returns a list of objects, each with the original input and the
     predicted emotion.
 
     #### Example response:
@@ -71,6 +73,7 @@ class InputList(BaseModel):
 class Prediction(BaseModel):
     input: str
     prediction: str
+    confidence: float
 
 
 @app.get("/")
@@ -104,34 +107,9 @@ async def predict(input_data: List[Input] = Body(...)):
     results = []
     for item in input_data:
         try:
-            emotion = predict_emotion(item.text)
+            emotion, confidence = predictor.output_emotion(item.text)
         except Exception:
             raise HTTPException(status_code=422, detail="validation error")
-        results.append(Prediction(input=item.text, prediction=emotion))
+        results.append(Prediction(input=item.text, prediction=emotion,
+                                  confidence=confidence))
     return results
-
-
-'''
-if __name__ == '__main__':
-    type_of_model = "Bert_p"
-    if type_of_model == "Baseline":
-        baseline = BaselineModel()
-        print(baseline.pipeline())
-    elif type_of_model == "Bert":
-        model = BertModel()
-        model.pipeline()
-    elif type_of_model == "Bert_p":
-        prediction = PredictEkphrasisBert()
-        number_of_predictions = int(input("How many predictions would you like\
-        to make?"))
-        if number_of_predictions <= 0:
-            raise ValueError("Number of predictions must be greater than 0.")
-        i = 0
-        while i < number_of_predictions:
-            i += 1
-            text = input("What text would you like predict?")
-            label_class, prob = prediction.predict(text)
-            print(f"The predicted class is {label_class} with a probability of {(prob*100):.2f}%.")
-            #print(prediction.predict(text))
-
-
