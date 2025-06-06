@@ -14,14 +14,14 @@ class MainPreprocessing():
     def __init__(self, test_data: bool = False):
         self._label_encoder = LabelEncoder()
 
-    def extract_features_labels(self, df: pd.DataFrame, feature_name: str,
+    def _extract_features_labels(self, df: pd.DataFrame, feature_name: str,
                                 label_name: str) -> tuple[pd.DataFrame,
                                                           pd.DataFrame]:
         X = df[feature_name]
         y = df[label_name]
         return X, y
 
-    def apply_clean_text(self, text: str) -> str:
+    def _apply_clean_text(self, text: str) -> str:
         return clean(
             text, to_ascii=True,
             normalize_whitespace=True,
@@ -30,10 +30,10 @@ class MainPreprocessing():
             keep_two_line_breaks=False,
             )
 
-    def translate_emoji(self, text: str) -> str:
+    def _translate_emoji(self, text: str) -> str:
         return emoji.demojize(text)
 
-    def remove_stopwords(self, text: str) -> str:
+    def _remove_stopwords(self, text: str) -> str:
         stop_words = set(stopwords.words('english'))
         words = text.split()
         filtered_words = [
@@ -43,22 +43,22 @@ class MainPreprocessing():
     def clean_text(
             self,
             text: str,) -> str:
-        text = self.translate_emoji(text)
+        text = self._translate_emoji(text)
         text = text.lower()
         text = BeautifulSoup(text, "lxml").get_text()
         text = re.sub(r"@\w+", "", text)
         text = re.sub(r"#", "", text)
         text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
-        text = self.remove_stopwords(text)
-        text = self.apply_clean_text(text)
+        text = self._remove_stopwords(text)
+        text = self._apply_clean_text(text)
         return text
 
-    def preprocess_df(
+    def _preprocess_df(
             self,
             df: pd.DataFrame,
             training=False):
-        X, y = self.extract_features_labels(df, "tweet", "emotion")
+        X, y = self._extract_features_labels(df, "tweet", "emotion")
         X = X.apply(lambda text: self.clean_text(text,))
         if training:
             y = self._label_encoder.fit_transform(y)
@@ -79,10 +79,10 @@ class MainPreprocessing():
                                 orient="records", lines=True)
         test_data = pd.read_json(test_path,
                                  orient="records", lines=True)
-        X_training, y_training = self.preprocess_df(
+        X_training, y_training = self._preprocess_df(
             training_data, training=True)
-        X_dev, y_dev = self.preprocess_df(dev_data)
-        X_test, y_test = self.preprocess_df(test_data)
+        X_dev, y_dev = self._preprocess_df(dev_data)
+        X_test, y_test = self._preprocess_df(test_data)
         return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
 
 
