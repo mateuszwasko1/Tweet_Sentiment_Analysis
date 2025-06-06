@@ -19,7 +19,7 @@ class PredictEkphrasisBert():
 
     def predict(self, text):
         preprocessing = MainPreprocessing()
-        preprocessed_text = preprocessing.clean_text(text, False)
+        preprocessed_text = preprocessing.clean_text(text)
 
         train_encodings = self.bert_tokenizer(
             preprocessed_text,
