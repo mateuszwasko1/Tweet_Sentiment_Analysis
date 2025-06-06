@@ -18,7 +18,7 @@ class BertModel:
         self._device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
 
-    def tokenization(self, X):
+    def _tokenization(self, X):
         return self._tokenizer(
             X.tolist(),
             truncation=True,
@@ -27,7 +27,7 @@ class BertModel:
             return_tensors="pt"
         )
 
-    def organize_data(self, data, batch_size=16):
+    def _organize_data(self, data, batch_size=16):
         (X_training, y_training), (X_dev, y_dev), (X_test, y_test) = data
 
         number_of_labels = len(np.unique(y_training))
@@ -62,7 +62,7 @@ class BertModel:
 
         return train_loader, dev_loader, test_loader, number_of_labels
 
-    def get_model(self, number_of_labels, model_name):
+    def _get_model(self, number_of_labels, model_name):
         config = AutoConfig.from_pretrained(
             model_name,
             num_labels=number_of_labels,
@@ -74,7 +74,7 @@ class BertModel:
         model.to(self._device)
         return model
 
-    def model_training(self,
+    def _model_training(self,
                        model,
                        X_training,
                        X_dev,
@@ -173,7 +173,7 @@ class BertModel:
             model.load_state_dict(best_model_state)
         return model
 
-    def saving_model(
+    def _saving_model(
             self,
             model,
             label_encoder,
@@ -182,7 +182,7 @@ class BertModel:
         self._tokenizer.save_pretrained(f"{directory}model")
         joblib.dump(label_encoder, f"{directory}label_encoder")
 
-    def evaluation(self, model, X_test):
+    def _evaluation(self, model, X_test):
         model.eval()
         all_predictions = []
         all_lables = []
@@ -213,7 +213,7 @@ class BertModel:
         lr = 5e-5
         weight_decay = 0.00
         batch_size = 16
-        save_directory = "data/model/saved_bert/"
+        save_directory = "models/saved_bert/"
 
         # Pipeline #
         ekphrasis_preprocessing = MainPreprocessing()
@@ -223,9 +223,9 @@ class BertModel:
             model_type,
             use_fast=False)
         train_loader, dev_loader, test_loader, number_of_labels = (
-            self.organize_data(data, batch_size=batch_size))
-        model = self.get_model(number_of_labels, model_type)
-        best_model = self.model_training(
+            self._organize_data(data, batch_size=batch_size))
+        model = self._get_model(number_of_labels, model_type)
+        best_model = self._model_training(
             model,
             train_loader,
             dev_loader,
@@ -234,9 +234,9 @@ class BertModel:
             lr=lr,
             weight_decay=weight_decay)
         label_encoder = ekphrasis_preprocessing.label_encoder
-        self.saving_model(
+        self._saving_model(
             best_model,
             label_encoder,
             directory=save_directory)
-        metrics = self.evaluation(best_model, test_loader)
+        metrics = self._evaluation(best_model, test_loader)
         return metrics
