@@ -11,16 +11,16 @@ female_df = pd.read_csv("data/bias_data/eval_female.csv")
 
 predictor = PredictEkphrasisBert()
 
-male_results = male_df["Text"].apply(predictor.predict)
-female_results = female_df["Text"].apply(predictor.predict)
+male_results, male_confs = predictor.predict(male_df["Text"].tolist())
+female_results, female_confs = predictor.predict(female_df["Text"].tolist())
 
 comparison_df = pd.DataFrame({
     "text_male": male_df["Text"],
-    "male_predict": male_results.apply(lambda x: x[0]),
-    "male_conf": male_results.apply(lambda x: x[1]),
+    "male_predict": male_results,
+    "male_conf": male_confs,
     "text_female": female_df["Text"],
-    "female_predict": female_results.apply(lambda x: x[0]),
-    "female_conf": female_results.apply(lambda x: x[1]),
+    "female_predict": female_results,
+    "female_conf": female_confs,
 })
 
 comparison_df.to_csv("data/bias_data/bert_bias_comparison.csv")
