@@ -113,7 +113,7 @@ async def predict(input_data: List[Input] = Body(...)):
 
 '''
 if __name__ == '__main__':
-    type_of_model = "Bert_p"
+    type_of_model = "Baseline"
     if type_of_model == "Baseline":
         baseline = BaselineModel()
         print(baseline.pipeline())
