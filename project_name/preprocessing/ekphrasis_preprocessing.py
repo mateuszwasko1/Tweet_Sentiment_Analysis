@@ -49,7 +49,7 @@ class MainPreprocessing():
         text = re.sub(r"#", "", text)
         text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
-        text = self.remove_stopwords(text)
+        #text = self.remove_stopwords(text)
         text = self.apply_clean_text(text)
         return text
 
