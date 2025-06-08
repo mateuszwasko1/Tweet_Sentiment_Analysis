@@ -11,12 +11,12 @@ nltk.download('stopwords')
 
 
 class MainPreprocessing():
-    def __init__(self, test_data: bool = False):
+    def __init__(self):
         self._label_encoder = LabelEncoder()
 
-    def _extract_features_labels(self, df: pd.DataFrame, feature_name: str,
-                                label_name: str) -> tuple[pd.DataFrame,
-                                                          pd.DataFrame]:
+    def _extract_features_labels(self, df: pd.DataFrame, feature_name: str, 
+                                 label_name: str) -> tuple[pd.DataFrame,
+                                    pd.DataFrame]:
         X = df[feature_name]
         y = df[label_name]
         return X, y
@@ -44,14 +44,14 @@ class MainPreprocessing():
             self,
             text: str,) -> str:
         text = self._translate_emoji(text)
-        text = text.lower()
+        #text = text.lower()
         text = BeautifulSoup(text, "lxml").get_text()
         text = re.sub(r"@\w+", "", text)
         text = re.sub(r"#", "", text)
         text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
-        text = self._remove_stopwords(text)
-        text = self._apply_clean_text(text)
+        #text = self._remove_stopwords(text)
+        #text = self._apply_clean_text(text)
         return text
 
     def _preprocess_df(
