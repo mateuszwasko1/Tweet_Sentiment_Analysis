@@ -55,7 +55,7 @@ st.markdown(
     """
     <div class="info-panel">
       Paste one or more tweets below (one per line).<br>
-      Click <strong>Classify</strong> to send them to the FastAPI server’s 
+      Click <strong>Classify</strong> to send them to the FastAPI server’s
       <code>/predict</code> endpoint and see the predicted emotions.
     </div>
     """,

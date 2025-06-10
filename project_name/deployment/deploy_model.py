@@ -4,7 +4,7 @@ from project_name.deployment.process_deployment import PredictEmotion
 from starlette.responses import RedirectResponse
 from typing import List
 
-predictor = PredictEmotion(baseline=True)
+predictor = PredictEmotion(baseline=False)
 
 app = FastAPI(
     title="Logistic Regression Sentiment Analysis",
@@ -86,9 +86,12 @@ async def health():
 
 @app.get("/info")
 async def info():
+    if predictor.baseline:
+        model_name = "Baseline Logistic Regression"
+    else:
+        model_name = "RoBERTa"
     return {
-        "model": "LogisticRegression",
-        "version": "1.0",
+        "model": {model_name},
         "classes": ["anger", "joy", "sadness", "fear"]
     }
 

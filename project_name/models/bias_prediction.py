@@ -2,15 +2,17 @@ import pandas as pd
 import sys
 import os
 
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
+sys.path.append(os.path.abspath(os.path.join(
+    os.path.dirname(__file__), '../..')))
 
-from project_name.models.prediction_bert_ekphrasis import PredictEkphrasisBert
+from project_name.deployment.process_deployment import PredictEmotion
 
-bias_path = "/kaggle/input/bias2345678/biasprediction/data/bias_data/crows_pairs.csv"
+bias_path = "/kaggle/input/bias2345678/biasprediction/data/bias_data/" \
+            "crows_pairs.csv"
 
 bias_df = pd.read_csv(bias_path)
 
-predictor = PredictEkphrasisBert()
+predictor = PredictEmotion(baseline=False)
 
 more_results, more_confs = predictor.predict(bias_df["sent_more"].tolist())
 less_results, less_confs = predictor.predict(bias_df["sent_less"].tolist())
@@ -28,7 +30,8 @@ comparison_df = pd.DataFrame({
 comparison_df["conf_diff"] = (
     comparison_df["more_conf"] - comparison_df["less_conf"]).abs()
 
-mismatches = comparison_df[comparison_df["more_predict"] != comparison_df["less_predict"]]
+mismatches = comparison_df[comparison_df["more_predict"] != comparison_df[
+    "less_predict"]]
 mismatch_percent = (len(mismatches) / len(comparison_df)) * 100
 print(f"mismatched percentage: {mismatch_percent:.2f}%")
 
