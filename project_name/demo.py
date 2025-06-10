@@ -92,12 +92,27 @@ if st.button("Classify"):
                            tweet{'s' if len(results)>1 else ''}.")
                 st.table(df_results)
 
+
+@st.cache_data(show_spinner=False)
+def get_model_info():
+    try:
+        info_response = requests.get("http://localhost:8000/info", timeout=5)
+        info_response.raise_for_status()
+        return info_response.json()
+    except Exception:
+        return {"model": "Unknown", "classes": []}
+
+
+model_info = get_model_info()
+model_name = model_info.get("model", "Unknown")
+classes = ", ".join(model_info.get("classes", []))
+
 st.markdown(
-    """
+    f"""
     <div class="footer">
       <hr>
-      <strong>Model:</strong> Logistic Regression<br>
-      <strong>Classes:</strong> anger, joy, sadness, fear
+      <strong>Model:</strong> {model_name}<br>
+      <strong>Classes:</strong> {classes}
     </div>
     """,
     unsafe_allow_html=True
