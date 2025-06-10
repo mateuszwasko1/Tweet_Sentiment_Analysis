@@ -230,7 +230,7 @@ class BertModel:
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     labels=labels).logits
-                
+
                 probs = torch.nn.functional.softmax(logits, dim=1)
                 preds = logits.argmax(dim=1)
                 all_predictions.extend(preds.cpu().tolist())

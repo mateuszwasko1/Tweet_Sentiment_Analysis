@@ -1,12 +1,12 @@
 import numpy as np
-# import os
-# import sys
-# sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
-#                                              '..')))
+import os
+import sys
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
+                                             '..')))
 from project_name.models.save_load_model import ModelSaver
 from project_name.preprocessing.baseline_preprocessing import (
     BaselinePreprocessor)
-from project_name.preprocessing.ekphrasis_preprocessing import (
+from project_name.preprocessing.bert_preprocessing import (
     MainPreprocessing)
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
@@ -40,7 +40,6 @@ class PredictEmotion():
             prediction = self.model.predict(text)
             probability = self.model.predict_proba(text)
             confidence = np.max(probability, axis=1)[0]
-            return prediction, confidence
         else:
             train_encodings = self.bert_tokenizer(
                 text,
@@ -57,7 +56,8 @@ class PredictEmotion():
                 predicted_label = self.label_encoder.inverse_transform(
                     [predicted_class.item()])[0]
                 confidence = prob_val.item()
-            return str(predicted_label), confidence
+                prediction = str(predicted_label)
+        return prediction, confidence
 
     def output_emotion(self, text: str) -> str:
         tweet_cleaned = self.preprocessor.preprocessing_pipeline(
@@ -73,7 +73,7 @@ class PredictEmotion():
 
 
 if __name__ == "__main__":
-    predictor = PredictEmotion(baseline=True)
+    predictor = PredictEmotion(baseline=False)
     text = "I am happy"
     prediction, confidence = predictor.output_emotion(text)
     print(f"Prediction: {prediction}, Confidence: {confidence:.2f}")
