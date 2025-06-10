@@ -1,11 +1,14 @@
-from project_name.preprocessing.ekphrasis_preprocessing import (
+from project_name.preprocessing.bert_preprocessing import (
     MainPreprocessing)
 from transformers import (
     AutoTokenizer, AutoModelForSequenceClassification, AutoConfig)
-from sklearn.metrics import accuracy_score, classification_report
+from sklearn.metrics import (
+    accuracy_score, classification_report, roc_curve, auc)
 from sklearn.utils.class_weight import compute_class_weight
+from sklearn.preprocessing import label_binarize
 from torch.utils.data import DataLoader, TensorDataset
 from torch.nn import CrossEntropyLoss
+import matplotlib.pyplot as plt
 from torch.optim import AdamW
 from tqdm.auto import tqdm
 import numpy as np
@@ -15,13 +18,10 @@ import torch
 
 class BertModel:
     def __init__(self):
-
-        self.tokenizer = AutoTokenizer.from_pretrained("roberta-base",
-                                                       use_fast=False)
-        self.device = torch.device(
+        self._device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
 
-    def tokenization(self, X):
+    def _tokenization(self, X):
         return self._tokenizer(
             X.tolist(),
             truncation=True,
@@ -30,14 +30,14 @@ class BertModel:
             return_tensors="pt"
         )
 
-    def organize_data(self, data, batch_size=16):
+    def _organize_data(self, data, batch_size=16):
         (X_training, y_training), (X_dev, y_dev), (X_test, y_test) = data
 
         number_of_labels = len(np.unique(y_training))
 
-        X_training = self.tokenization(X_training)
-        X_dev = self.tokenization(X_dev)
-        X_test = self.tokenization(X_test)
+        X_training = self._tokenization(X_training)
+        X_dev = self._tokenization(X_dev)
+        X_test = self._tokenization(X_test)
 
         y_training = torch.tensor(y_training, dtype=torch.long)
         weights = compute_class_weight(
@@ -65,20 +65,26 @@ class BertModel:
 
         return train_loader, dev_loader, test_loader, number_of_labels
 
-    def get_model(self, number_of_labels, model_name):
+    def _get_model(self, number_of_labels, model_name, dropout):
         config = AutoConfig.from_pretrained(
             model_name,
             num_labels=number_of_labels,
-            hidden_dropout_prob=0.3,
-            attention_probs_dropout_prob=0.3)
+            hidden_dropout_prob=dropout,
+            attention_probs_dropout_prob=dropout)
         model = AutoModelForSequenceClassification.from_pretrained(
             model_name,
             config=config)
         model.to(self._device)
         return model
 
-    def model_training(self, model, X_training, X_dev, epochs=15,
-                       early_stopping=True, lr=5e-5, weight_decay=0.00):
+    def _model_training(self,
+                        model,
+                        X_training,
+                        X_dev,
+                        epochs=15,
+                        early_stopping=True,
+                        lr=5e-5,
+                        weight_decay=0.00):
         optimizer = AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
         EPOCHS = epochs
 
@@ -156,7 +162,7 @@ class BertModel:
             print(f"Epoch {epoch+1}: val loss =\
                   {(val_loss):.4f}")
 
-            if val_loss > best_val_loss:
+            if val_loss < best_val_loss:
                 best_val_loss = val_loss
                 best_model_state = model.state_dict()
                 counter = 0
@@ -170,16 +176,48 @@ class BertModel:
             model.load_state_dict(best_model_state)
         return model
 
-    def saving_model(self, model, label_encoder,
-                     directory="data/model/saved_bert/"):
+    def _saving_model(
+            self,
+            model,
+            label_encoder,
+            directory="data/model/saved_bert/"):
         model.save_pretrained(f"{directory}model")
         self._tokenizer.save_pretrained(f"{directory}model")
         joblib.dump(label_encoder, f"{directory}label_encoder")
 
-    def evaluation(self, model, X_test):
+    def _plot_roc_curve(self, y_true, y_score):
+        classes = np.unique(y_true)
+        y_bin = label_binarize(y_true, classes=classes)
+
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+
+        for i, class_id in enumerate(classes):
+            fpr[class_id], tpr[class_id], _ = roc_curve(
+                y_bin[:, i], y_score[:, i])
+            roc_auc[class_id] = auc(fpr[class_id], tpr[class_id])
+
+        plt.figure(figsize=(10, 7))
+        for class_id in classes:
+            class_label = self._label_encoder.inverse_transform([class_id])[0]
+            plt.plot(fpr[class_id], tpr[class_id], label=(
+                f"Class {class_label} (AUC = {roc_auc[class_id]:.2f})"))
+        plt.plot([0, 1], [0, 1], "k--", label="Random")
+        plt.grid(True)
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title("ROC Curve for BERT Model")
+        plt.legend(loc="lower right")
+        plt.show()
+
+    def _evaluation(self, model, X_test):
         model.eval()
         all_predictions = []
         all_lables = []
+        all_probs = []
 
         with torch.no_grad():
             for input_ids, attention_mask, labels in X_test:
@@ -192,33 +230,38 @@ class BertModel:
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     labels=labels).logits
+                
+                probs = torch.nn.functional.softmax(logits, dim=1)
                 preds = logits.argmax(dim=1)
-                all_predictions.extend(preds.tolist())
-                all_lables.extend(labels.tolist())
+                all_predictions.extend(preds.cpu().tolist())
+                all_lables.extend(labels.cpu().tolist())
+                all_probs.extend(probs.cpu().numpy())
 
         print("Test Accuracy:", accuracy_score(all_lables, all_predictions))
         print(classification_report(all_lables, all_predictions))
+        self._plot_roc_curve(np.array(all_lables), np.array(all_probs))
 
     def pipeline(self):
         # Model Parameters #
         model_type = "roberta-base"
         early_stopping = True
         epochs = 15
-        lr = 5e-5
-        weight_decay = 0.00
-        batch_size = 16
+        lr = 2e-5
+        weight_decay = 0.01
+        batch_size = 32
+        dropout = 0.03
         save_directory = "models/saved_bert/"
 
         # Pipeline #
         ekphrasis_preprocessing = MainPreprocessing()
-        data = ekphrasis_preprocessing.preprocessing_pipeline(
-            ekphrasis_preprocessing=False)
-        self._tokenizer = AutoTokenizer.from_pretrained(model_type,
-                                                        use_fast=False)
+        data = ekphrasis_preprocessing.preprocessing_pipeline()
+        self._tokenizer = AutoTokenizer.from_pretrained(
+            model_type,
+            use_fast=False)
         train_loader, dev_loader, test_loader, number_of_labels = (
-            self.organize_data(data, batch_size=batch_size))
-        model = self.get_model(number_of_labels, model_type)
-        best_model = self.model_training(
+            self._organize_data(data, batch_size=batch_size))
+        model = self._get_model(number_of_labels, model_type, dropout)
+        best_model = self._model_training(
             model,
             train_loader,
             dev_loader,
@@ -226,10 +269,10 @@ class BertModel:
             early_stopping=early_stopping,
             lr=lr,
             weight_decay=weight_decay)
-        label_encoder = ekphrasis_preprocessing.label_encoder
-        self.saving_model(
+        self._label_encoder = ekphrasis_preprocessing._label_encoder
+        self._saving_model(
             best_model,
-            label_encoder,
+            self._label_encoder,
             directory=save_directory)
-        metrics = self.evaluation(best_model, test_loader)
+        metrics = self._evaluation(best_model, test_loader)
         return metrics

@@ -1,4 +1,4 @@
-from project_name.models.bert_ekphrasis import BertModel
+from project_name.models.bert_model import BertModel
 from project_name.models.baseline import BaselineModel
 from project_name.models.prediction_bert_ekphrasis import PredictEkphrasisBert
 from fastapi import FastAPI, HTTPException, Body
@@ -113,7 +113,7 @@ async def predict(input_data: List[Input] = Body(...)):
 
 '''
 if __name__ == '__main__':
-    type_of_model = "Bert_p"
+    type_of_model = "Baseline"
     if type_of_model == "Baseline":
         baseline = BaselineModel()
         print(baseline.pipeline())

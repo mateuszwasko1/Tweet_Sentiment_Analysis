@@ -1,8 +1,5 @@
-import sys
-import os
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
-                                             '..')))
-from project_name.preprocessing.baseline_preprocessing import BaselinePreprocessor
+from project_name.preprocessing.baseline_preprocessing import (
+    BaselinePreprocessor)
 from project_name.models.save_load_model import ModelSaver
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import classification_report
@@ -11,6 +8,12 @@ from sklearn.model_selection import PredefinedSplit
 import numpy as np
 import scipy.sparse
 import matplotlib.pyplot as plt
+from sklearn.preprocessing import label_binarize
+from sklearn.metrics import roc_curve, auc
+import sys
+import os
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
+                                             '..')))
 
 
 class BaselineModel():
@@ -49,7 +52,7 @@ class BaselineModel():
         }
 
         grid = GridSearchCV(LogisticRegression(), parameters, cv=ps,
-                            return_train_score=True)
+                            return_train_score=True, n_jobs=-1)
         grid.fit(X_combined, y_combined)
         self.model = grid
         model_saver = ModelSaver()
@@ -68,7 +71,6 @@ class BaselineModel():
         """
         grid_predictions = self.predict()
         print(classification_report(self.y_test, grid_predictions))
-        self.loss_plotter()
         return self.best_parameters, grid_predictions
 
     def loss_plotter(self):
@@ -90,6 +92,41 @@ class BaselineModel():
         plt.legend()
         plt.show()
 
+    def plot_final_roc_curve(self):
+        """
+        Plots ROC curves for the best model on the test set.
+        """
+        y_score = self.model.predict_proba(self.X_test)
+
+        classes = sorted(np.unique(self.y_test))
+        y_test_bin = label_binarize(self.y_test, classes=classes)
+
+        fpr = dict()
+        tpr = dict()
+        roc_auc = dict()
+
+        for i, class_id in enumerate(classes):
+            fpr[class_id], tpr[class_id], _ = roc_curve(
+                y_test_bin[:, i], y_score[:, i])
+            roc_auc[class_id] = auc(fpr[class_id], tpr[class_id])
+
+        # Plot all ROC curves
+        plt.figure(figsize=(10, 7))
+        for class_id in classes:
+            plt.plot(fpr[class_id], tpr[class_id], label=(
+                f"Class {class_id} (AUC = {roc_auc[class_id]:.2f})"))
+
+        plt.plot([0, 1], [0, 1], 'k--', label="Random")
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel("False Positive Rate")
+        plt.ylabel("True Positive Rate")
+        plt.title("ROC Curve for Baseline Model")
+        plt.legend(loc="lower right")
+        plt.grid(True)
+        plt.tight_layout()
+        plt.show()
+
     def pipeline(self, training=True):
         """
         Runs the preprocessing pipeline, trains the model, prints the
@@ -107,6 +144,7 @@ class BaselineModel():
             model_loader = ModelSaver()
             self.model = model_loader.load_model("baseline_model")
         self.evaluate()
+        self.plot_final_roc_curve()
         self.loss_plotter()
 
 
