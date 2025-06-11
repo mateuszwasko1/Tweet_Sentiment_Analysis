@@ -1,79 +1,125 @@
-import numpy as np
 import os
 import sys
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
-                                             '..')))
+
+import joblib
+import numpy as np
+import torch
+import torch.nn.functional as F
+from fastapi import FastAPI
+from sklearn.base import ClassifierMixin
+from sklearn.preprocessing import LabelEncoder
+from transformers import AutoModelForSequenceClassification, AutoTokenizer
+
 from project_name.models.save_load_model import ModelSaver
 from project_name.preprocessing.baseline_preprocessing import (
     BaselinePreprocessor)
-from project_name.preprocessing.bert_preprocessing import (
-    MainPreprocessing)
-from transformers import AutoModelForSequenceClassification, AutoTokenizer
-import torch
-import joblib
-import torch.nn.functional as F
-from fastapi import FastAPI
+from project_name.preprocessing.bert_preprocessing import MainPreprocessing
+
+sys.path.append(os.path.abspath(os.path.join(__file__, "..", "..")))
 
 app = FastAPI()
 
 
-class PredictEmotion():
-    def __init__(self, baseline=False):
-        self.baseline = baseline
-        if baseline:
-            model_loader = ModelSaver()
-            self.model = model_loader.load_model("baseline_model")
+class PredictEmotion:
+    """
+    Interface to classify emotions in text using either a baseline
+    scikit-learn model or a BERT-based transformer model.
+    """
+
+    def __init__(self, use_baseline: bool = False) -> None:
+        """
+        Load the chosen model and its preprocessing pipeline.
+
+        Args:
+            use_baseline (bool): If True, loads a scikit-learn
+                baseline model. Otherwise loads a HuggingFace
+                BERT sequence classification model.
+
+        Raises:
+            FileNotFoundError: If expected model files are missing.
+        """
+        self.use_baseline = use_baseline
+
+        if use_baseline:
+            saver = ModelSaver()
+            self.model: ClassifierMixin = saver.load_model("baseline_model")
             self.preprocessor = BaselinePreprocessor()
-        else:  # Use BERT model
-            bert_model_path = "models/saved_bert/model"
-            bert_label_encoder_path = "models/saved_bert/" \
-                                      "label_encoder"
+        else:
+            bert_dir = "models/saved_bert/model"
+            label_enc_file = "models/saved_bert/label_encoder"
+
             self.model = AutoModelForSequenceClassification.from_pretrained(
-                bert_model_path)
-            self.bert_tokenizer = AutoTokenizer.from_pretrained(
-                bert_model_path)
-            self.label_encoder = joblib.load(bert_label_encoder_path)
+                bert_dir
+            )
+            self.tokenizer = AutoTokenizer.from_pretrained(bert_dir)
+            self.label_encoder: LabelEncoder = joblib.load(label_enc_file)
             self.preprocessor = MainPreprocessing()
 
-    def predict(self, text):
-        if self.baseline:
-            prediction = self.model.predict(text)
-            probability = self.model.predict_proba(text)
-            confidence = np.max(probability, axis=1)[0]
+    def predict(self, text: str) -> tuple[str, float]:
+        """
+        Predict emotion label and confidence score for preprocessed text.
+
+        Args:
+            text (str): Token or string input ready for the model.
+
+        Returns:
+            tuple[str, float]: (predicted_label, confidence_score)
+        """
+        if self.use_baseline:
+            # baseline model expects array-like input
+            preds = self.model.predict([text])
+            probs = self.model.predict_proba([text])
+            confidence = float(np.max(probs, axis=1)[0])
+            label = str(preds[0])
         else:
-            train_encodings = self.bert_tokenizer(
+            # tokenize and run through BERT
+            batch = self.tokenizer(
                 text,
                 truncation=True,
-                padding=True,
+                padding="max_length",
                 max_length=128,
-                return_tensors="pt")
-
+                return_tensors="pt",
+            )
             with torch.no_grad():
-                logits = self.model(**train_encodings).logits
-                probability = F.softmax(logits, dim=1)
+                outputs = self.model(**batch)
+                logits = outputs.logits
+                probs = F.softmax(logits, dim=1)
+                confidence_tensor, idx_tensor = torch.max(probs, dim=1)
+                confidence = confidence_tensor.item()
+                label = self.label_encoder.inverse_transform(
+                    [idx_tensor.item()]
+                )[0]
 
-                prob_val, predicted_class = torch.max(probability, dim=1)
-                predicted_label = self.label_encoder.inverse_transform(
-                    [predicted_class.item()])[0]
-                confidence = prob_val.item()
-                prediction = str(predicted_label)
-        return prediction, confidence
+        return label, confidence
 
-    def output_emotion(self, text: str) -> str:
-        tweet_cleaned = self.preprocessor.preprocessing_pipeline(
-            at_inference=True, data=text)
-        if hasattr(tweet_cleaned, "iloc"):
-            cleaned_text = tweet_cleaned.iloc[0]
+    def output_emotion(self, raw_text: str) -> tuple[str, float]:
+        """
+        Full pipeline: preprocess raw text, predict label, round confidence.
+
+        Args:
+            raw_text (str): Original text input (e.g., a tweet).
+
+        Returns:
+            tuple[str, float]: (predicted_label,
+            confidence_rounded_to_two_decimals)
+        """
+        processed = self.preprocessor.preprocessing_pipeline(
+            at_inference=True,
+            data=raw_text,
+        )
+
+        # Handle pandas Series vs plain string
+        if hasattr(processed, "iloc"):
+            cleaned = str(processed.iloc[0])
         else:
-            cleaned_text = tweet_cleaned
-        prediction, confidence = self.predict(cleaned_text)
-        if isinstance(prediction, (np.ndarray, list)):
-            return str(prediction[0]), float(round(confidence, 2))
-        return str(prediction), float(round(confidence, 2))
+            cleaned = str(processed)
+
+        label, score = self.predict(cleaned)
+        return label, round(score, 2)
 
 
 if __name__ == "__main__":
-    predictor = PredictEmotion(baseline=False)
-    text = "I am happy"
-    prediction, confidence = predictor.output_emotion(text)
-    print(f"Prediction: {prediction}, Confidence: {confidence:.2f}")
+    predictor = PredictEmotion(use_baseline=False)
+    test_sentence = "I am happy"
+    emotion, conf = predictor.output_emotion(test_sentence)
+    print(f"Prediction: {emotion}, Confidence: {conf:.2f}")
