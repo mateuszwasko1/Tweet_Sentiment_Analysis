@@ -1,18 +1,13 @@
 import os
 import pandas as pd
 import emoji
-from cleantext import clean
 from sklearn.preprocessing import LabelEncoder
 from bs4 import BeautifulSoup
 import re
-import nltk
-from nltk.corpus import stopwords
-
 
 class MainPreprocessing():
     def __init__(self):
         self._label_encoder = LabelEncoder()
-        nltk.download('stopwords')
         self.at_inference = False
 
     def _extract_features_labels(self, df: pd.DataFrame, feature_name: str,
@@ -22,37 +17,18 @@ class MainPreprocessing():
         y = df[label_name]
         return X, y
 
-    def _apply_clean_text(self, text: str) -> str:
-        return clean(
-            text, to_ascii=True,
-            normalize_whitespace=True,
-            no_line_breaks=False,
-            strip_lines=True,
-            keep_two_line_breaks=False,
-            )
-
     def _translate_emoji(self, text: str) -> str:
         return emoji.demojize(text)
-
-    def _remove_stopwords(self, text: str) -> str:
-        stop_words = set(stopwords.words('english'))
-        words = text.split()
-        filtered_words = [
-            word for word in words if word.lower() not in stop_words]
-        return " ".join(filtered_words)
 
     def clean_text(
             self,
             text: str,) -> str:
         text = self._translate_emoji(text)
-        # text = text.lower()
         text = BeautifulSoup(text, "lxml").get_text()
         text = re.sub(r"@\w+", "", text)
         text = re.sub(r"#", "", text)
         text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
-        # text = self._remove_stopwords(text)
-        # text = self._apply_clean_text(text)
         return text
 
     def _preprocess_training_df(self, df: pd.DataFrame, training=False):

@@ -89,7 +89,7 @@ class BertModel:
         EPOCHS = epochs
 
         if early_stopping:
-            best_val_loss = 0
+            best_val_loss = float('inf')
             patience = 3
             counter = 0
             best_model_state = None
@@ -230,7 +230,7 @@ class BertModel:
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     labels=labels).logits
-
+                
                 probs = torch.nn.functional.softmax(logits, dim=1)
                 preds = logits.argmax(dim=1)
                 all_predictions.extend(preds.cpu().tolist())
