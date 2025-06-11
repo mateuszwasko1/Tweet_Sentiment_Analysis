@@ -3,7 +3,8 @@ from project_name.preprocessing.bert_preprocessing import (
 from transformers import (
     AutoTokenizer, AutoModelForSequenceClassification, AutoConfig)
 from sklearn.metrics import (
-    accuracy_score, classification_report, roc_curve, auc)
+    accuracy_score, classification_report, roc_curve, auc, confusion_matrix,
+    ConfusionMatrixDisplay)
 from sklearn.utils.class_weight import compute_class_weight
 from sklearn.preprocessing import label_binarize
 from torch.utils.data import DataLoader, TensorDataset
@@ -87,10 +88,12 @@ class BertModel:
                         weight_decay=0.00):
         optimizer = AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
         EPOCHS = epochs
+        self._train_losses = []
+        self._val_losses = []
 
         if early_stopping:
             best_val_loss = float('inf')
-            patience = 3
+            patience = 2
             counter = 0
             best_model_state = None
 
@@ -134,7 +137,10 @@ class BertModel:
                   {total_loss/len(X_training):.4f}")
             print(f"Epoch {epoch+1}: train accuracy =\
                   {((train_correct/train_total)*100):.2f}%")
+            avg_train_loss = total_loss / len(X_training)
+            self._train_losses.append(avg_train_loss)
 
+            # Evaluation
             model.eval()
             validation_loss = 0
             correct, total = 0, 0
@@ -161,16 +167,17 @@ class BertModel:
                   {(correct/total*100):.2f}%")
             print(f"Epoch {epoch+1}: val loss =\
                   {(val_loss):.4f}")
-
-            if val_loss < best_val_loss:
-                best_val_loss = val_loss
-                best_model_state = model.state_dict()
-                counter = 0
-            else:
-                counter += 1
-                if counter >= patience:
-                    print(f"Early Stopping at epoch {epoch+1}")
-                    break
+            self._val_losses.append(val_loss)
+            if early_stopping:
+                if val_loss < best_val_loss:
+                    best_val_loss = val_loss
+                    best_model_state = model.state_dict()
+                    counter = 0
+                else:
+                    counter += 1
+                    if counter >= patience:
+                        print(f"Early Stopping at epoch {epoch+1}")
+                        break
 
         if best_model_state is not None:
             model.load_state_dict(best_model_state)
@@ -179,11 +186,10 @@ class BertModel:
     def _saving_model(
             self,
             model,
-            label_encoder,
-            directory="data/model/saved_bert/"):
-        model.save_pretrained(f"{directory}model")
-        self._tokenizer.save_pretrained(f"{directory}model")
-        joblib.dump(label_encoder, f"{directory}label_encoder")
+            label_encoder):
+        model.save_pretrained(f"{self._save_directory}model")
+        self._tokenizer.save_pretrained(f"{self._save_directory}model")
+        joblib.dump(label_encoder, f"{self._save_directory}label_encoder")
 
     def _plot_roc_curve(self, y_true, y_score):
         classes = np.unique(y_true)
@@ -211,7 +217,8 @@ class BertModel:
         plt.ylabel("True Positive Rate")
         plt.title("ROC Curve for BERT Model")
         plt.legend(loc="lower right")
-        plt.show()
+        plt.savefig(f"{self._save_directory}auc.png", dpi=300)
+        plt.close()
 
     def _evaluation(self, model, X_test):
         model.eval()
@@ -230,7 +237,7 @@ class BertModel:
                     input_ids=input_ids,
                     attention_mask=attention_mask,
                     labels=labels).logits
-                
+
                 probs = torch.nn.functional.softmax(logits, dim=1)
                 preds = logits.argmax(dim=1)
                 all_predictions.extend(preds.cpu().tolist())
@@ -239,7 +246,32 @@ class BertModel:
 
         print("Test Accuracy:", accuracy_score(all_lables, all_predictions))
         print(classification_report(all_lables, all_predictions))
+
+        cm = confusion_matrix(all_lables, all_predictions)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot(cmap=plt.cm.Blues)
+        plt.title("Confusion Matrix - RoBERTa")
+        plt.tight_layout()
+        plt.savefig(f"{self._save_directory}confusion.png", dpi=300)
+        plt.close()
+        print("Raw Confusion Matrix:")
+        print(cm)
+
         self._plot_roc_curve(np.array(all_lables), np.array(all_probs))
+        self._plot_loss()
+
+    def _plot_loss(self):
+
+        plt.figure(figsize=(8,5))
+        epochs = range(1, len(self._train_losses) + 1)
+        plt.plot(epochs, self._train_losses, label="Train Loss")
+        plt.plot(epochs, self._val_losses,   label="Validation Loss")
+        plt.xlabel("Epoch")
+        plt.ylabel("Loss")
+        plt.title("Training & Validation Loss")
+        plt.legend()
+        plt.savefig(f"{self._save_directory}loss.png", dpi=300)
+        plt.close()
 
     def pipeline(self):
         # Model Parameters #
@@ -250,7 +282,7 @@ class BertModel:
         weight_decay = 0.01
         batch_size = 32
         dropout = 0.03
-        save_directory = "models/saved_bert/"
+        self._save_directory = "models/saved_bert/"
 
         # Pipeline #
         ekphrasis_preprocessing = MainPreprocessing()
@@ -272,7 +304,6 @@ class BertModel:
         self._label_encoder = ekphrasis_preprocessing._label_encoder
         self._saving_model(
             best_model,
-            self._label_encoder,
-            directory=save_directory)
+            self._label_encoder)
         metrics = self._evaluation(best_model, test_loader)
         return metrics

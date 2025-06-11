@@ -46,6 +46,7 @@ class PredictEmotion():
             prediction = self.model.predict(text)
             probability = self.model.predict_proba(text)
             confidence = np.max(probability, axis=1)[0]
+            return prediction, confidence
         else:
             train_encodings = self.bert_tokenizer(
                 text,
@@ -54,30 +55,30 @@ class PredictEmotion():
                 max_length=128,
                 return_tensors="pt")
             
-        dataset = TensorDataset(train_encodings["input_ids"],
-                                train_encodings["attention_mask"])
-        dataloader = DataLoader(dataset, batch_size=batch_size)
+            dataset = TensorDataset(train_encodings["input_ids"],
+                                    train_encodings["attention_mask"])
+            dataloader = DataLoader(dataset, batch_size=batch_size)
 
-        all_predictions = []
-        all_confs = []
+            all_predictions = []
+            all_confs = []
 
-        with torch.no_grad():
-            for input_ids, attention_mask in tqdm(dataloader, desc="batch prediction"):
-                input_ids = input_ids.to(self.device)
-                attention_mask = attention_mask.to(self.device)
+            with torch.no_grad():
+                for input_ids, attention_mask in tqdm(dataloader, desc="batch prediction"):
+                    input_ids = input_ids.to(self.device)
+                    attention_mask = attention_mask.to(self.device)
 
-                logits = self.model(
-                    input_ids=input_ids,
-                    attention_mask=attention_mask).logits
+                    logits = self.model(
+                        input_ids=input_ids,
+                        attention_mask=attention_mask).logits
 
-                probability = F.softmax(logits, dim=1)
+                    probability = F.softmax(logits, dim=1)
 
-                prob_val, predicted_class = torch.max(probability, dim=1)
-                all_predictions.extend(
-                    self.label_encoder.inverse_transform(predicted_class.cpu())
-                    )
-                all_confs.extend(prob_val.cpu().numpy())
-        return prediction, confidence
+                    prob_val, predicted_class = torch.max(probability, dim=1)
+                    all_confs.extend(prob_val.cpu().tolist())
+                    all_predictions.extend(
+                        self.label_encoder.inverse_transform(predicted_class.cpu())
+                        )
+            return all_predictions[0], all_confs[0]
 
     def output_emotion(self, text: str) -> str:
         tweet_cleaned = self.preprocessor.preprocessing_pipeline(

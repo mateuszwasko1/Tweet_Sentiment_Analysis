@@ -59,11 +59,9 @@ class MainPreprocessing():
                                          lines=True)
             dev_data = pd.read_json(dev_path, orient="records", lines=True)
             test_data = pd.read_json(test_path, orient="records", lines=True)
-            X_training, y_training = self._preprocess_training_df(pd.concat(
-                [training_data, dev_data]), fit=True)
-            self.test_data = True
-            X_dev, y_dev = self._preprocess_training_df(dev_data, fit=False)
-            X_test, y_test = self._preprocess_training_df(test_data, fit=False)
+            X_training, y_training = self._preprocess_training_df(training_data, training=True)
+            X_dev, y_dev = self._preprocess_training_df(dev_data)
+            X_test, y_test = self._preprocess_training_df(test_data)
             return (X_training, y_training), (X_dev, y_dev), (X_test, y_test)
         else:
             if data is None:

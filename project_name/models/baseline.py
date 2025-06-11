@@ -2,7 +2,8 @@ from project_name.preprocessing.baseline_preprocessing import (
     BaselinePreprocessor)
 from project_name.models.save_load_model import ModelSaver
 from sklearn.linear_model import LogisticRegression
-from sklearn.metrics import classification_report
+from sklearn.metrics import (
+    classification_report, confusion_matrix, ConfusionMatrixDisplay)
 from sklearn.model_selection import GridSearchCV
 from sklearn.model_selection import PredefinedSplit
 import numpy as np
@@ -71,7 +72,7 @@ class BaselineModel():
         """
         grid_predictions = self.predict()
         print(classification_report(self.y_test, grid_predictions))
-        return self.best_parameters, grid_predictions
+        return grid_predictions
 
     def loss_plotter(self):
         grid = self.model
@@ -127,6 +128,19 @@ class BaselineModel():
         plt.tight_layout()
         plt.show()
 
+    def plot_confusion_matrix(self, y_pred):
+        """
+        Plots the confusion matrix, shows it, and prints the raw table/
+        """
+        cm = confusion_matrix(self.y_test, y_pred)
+        disp = ConfusionMatrixDisplay(confusion_matrix=cm)
+        disp.plot(cmap=plt.cm.Blues)
+        plt.title("Baseline Confusion Matrix")
+        plt.show()
+        plt.clf()
+        print("Raw matrix:")
+        print(cm)
+
     def pipeline(self, training=True):
         """
         Runs the preprocessing pipeline, trains the model, prints the
@@ -143,8 +157,9 @@ class BaselineModel():
             self.y_test = y_test
             model_loader = ModelSaver()
             self.model = model_loader.load_model("baseline_model")
-        self.evaluate()
+        predictions = self.evaluate()
         self.plot_final_roc_curve()
+        self.plot_confusion_matrix(predictions)
         self.loss_plotter()
 
 
