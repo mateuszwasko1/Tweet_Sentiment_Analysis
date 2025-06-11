@@ -13,6 +13,8 @@ import torch
 import joblib
 import torch.nn.functional as F
 from fastapi import FastAPI
+from tqdm import tqdm
+from torch.utils.data import DataLoader, TensorDataset
 
 app = FastAPI()
 
@@ -20,22 +22,26 @@ app = FastAPI()
 class PredictEmotion():
     def __init__(self, baseline=False):
         self.baseline = baseline
+        self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu")
         if baseline:
             model_loader = ModelSaver()
-            self.model = model_loader.load_model("baseline_model")
+            self.model = model_loader.load_model("baseline_model").to(self.device)
             self.preprocessor = BaselinePreprocessor()
         else:  # Use BERT model
             bert_model_path = "models/saved_bert/model"
             bert_label_encoder_path = "models/saved_bert/" \
                                       "label_encoder"
+            self.device = torch.device(
+            "cuda" if torch.cuda.is_available() else "cpu")
             self.model = AutoModelForSequenceClassification.from_pretrained(
-                bert_model_path)
+                bert_model_path).to(self.device)
             self.bert_tokenizer = AutoTokenizer.from_pretrained(
                 bert_model_path)
             self.label_encoder = joblib.load(bert_label_encoder_path)
             self.preprocessor = MainPreprocessing()
 
-    def predict(self, text):
+    def predict(self, text, batch_size=32):
         if self.baseline:
             prediction = self.model.predict(text)
             probability = self.model.predict_proba(text)
@@ -47,16 +53,30 @@ class PredictEmotion():
                 padding=True,
                 max_length=128,
                 return_tensors="pt")
+            
+        dataset = TensorDataset(train_encodings["input_ids"],
+                                train_encodings["attention_mask"])
+        dataloader = DataLoader(dataset, batch_size=batch_size)
 
-            with torch.no_grad():
-                logits = self.model(**train_encodings).logits
+        all_predictions = []
+        all_confs = []
+
+        with torch.no_grad():
+            for input_ids, attention_mask in tqdm(dataloader, desc="batch prediction"):
+                input_ids = input_ids.to(self.device)
+                attention_mask = attention_mask.to(self.device)
+
+                logits = self.model(
+                    input_ids=input_ids,
+                    attention_mask=attention_mask).logits
+
                 probability = F.softmax(logits, dim=1)
 
                 prob_val, predicted_class = torch.max(probability, dim=1)
-                predicted_label = self.label_encoder.inverse_transform(
-                    [predicted_class.item()])[0]
-                confidence = prob_val.item()
-                prediction = str(predicted_label)
+                all_predictions.extend(
+                    self.label_encoder.inverse_transform(predicted_class.cpu())
+                    )
+                all_confs.extend(prob_val.cpu().numpy())
         return prediction, confidence
 
     def output_emotion(self, text: str) -> str:
