@@ -1,14 +1,18 @@
 # INSTRUCTIONS ON HOW TO RUN THE API AND INSTALL THE DEPENDENCIES
 
 # STARTING THE STREAMLIT
-Make sure that you run the FastAPI file beforehand on one terminal: 
+
+Make sure you are in the pipenv environment and that everything is updated:
 ```bash
-    uvicorn project_name.deployment.deploy_model:app --reload
+pipenv shell
+
+pipenv install
 ```
-Then, on a separate terminal, run the streamlit app:
+Then run the main.py file:
 ```bash
-    streamlit run project_name/demo.py
+python main.py
 ```
+Then you can access the streamlit: [http://localhost:8501/](http://localhost:8501/)
 
 ## RUNNING THE API
 Run the following code in the terminal to start the API

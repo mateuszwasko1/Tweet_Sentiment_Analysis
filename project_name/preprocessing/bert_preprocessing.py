@@ -27,6 +27,7 @@ class MainPreprocessing():
         text = BeautifulSoup(text, "lxml").get_text()
         text = re.sub(r"@\w+", "", text)
         text = re.sub(r"#", "", text)
+        text = re.sub(r"https?://\S+|www\.\S+", "", text)
         text = re.sub(r"[^a-zA-Z0-9\s.,!?]", " ", text)
         text = re.sub(r"\s+", " ", text).strip()
         return text
