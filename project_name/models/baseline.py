@@ -18,21 +18,34 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..',
 
 
 class BaselineModel():
-    def __init__(self):
+    """
+    Encapsulates training, evaluation, and plotting utilities for
+    a logistic regression baseline classifier with TF-IDF features.
+    """
+
+    def __init__(self) -> None:
+        """
+        Initialize placeholders for model, data, and parameters.
+        """
         self.best_parameters = None
         self.preprocessor = BaselinePreprocessor()
         self.model = None
         self.X_test = None
         self.y_test = None
 
-    def train(self, data):
+    def train(self, data: tuple[
+            tuple[scipy.sparse.spmatrix, np.ndarray],
+            tuple[scipy.sparse.spmatrix, np.ndarray],
+            tuple[scipy.sparse.spmatrix, np.ndarray],
+            ]
+             ) -> None:
         """
         Trains a logistic regression model using GridSearchCV, saves the
         fitted grid to the class instance, and saves the best model using
         ModelSaver in data/models.
 
         Args:
-            data (tuple): A tuple containing three pairs of (X, y) for
+            data (tuple): A triple tuple containing three pairs of (X, y) for
             training, development, and test sets:
                 ((X_training, y_training), (X_dev, y_dev), (X_test, y_test))
         """
@@ -59,12 +72,21 @@ class BaselineModel():
         model_saver = ModelSaver()
         model_saver.save_model(model=grid, file_name="baseline_model")
 
-    def predict(self):
+    def predict(self) -> np.ndarray:
+        """
+        Predict labels for the held-out test set stored in self.X_test.
+
+        Returns:
+            Array of predicted labels for X_test.
+        """
+        assert self.model is not None, (
+            "Model must be trained or loaded before prediction."
+        )
         grid_predictions = self.model.predict(self.X_test)
         self.best_parameters = self.model.best_params_
         return grid_predictions
 
-    def evaluate(self):
+    def evaluate(self) -> tuple[dict[str, object], np.ndarray]:
         """
         Evaluates the model by loading it if not already loaded,
         predicting on the test set, printing the classification report,
@@ -74,13 +96,15 @@ class BaselineModel():
         print(classification_report(self.y_test, grid_predictions))
         return grid_predictions
 
-    def loss_plotter(self):
+    def loss_plotter(self) -> None:
+        """
+        Plot training and validation scores against regularization C values.
+        """
         grid = self.model
         mean_train_scores = grid.cv_results_['mean_train_score']
         mean_val_scores = grid.cv_results_['mean_test_score']
         param_C = [params['C'] for params in grid.cv_results_['params']]
 
-        # Plotting
         plt.figure(figsize=(8, 5))
         plt.plot(param_C, mean_train_scores, label='Training Score',
                  marker='o')
@@ -93,7 +117,7 @@ class BaselineModel():
         plt.legend()
         plt.show()
 
-    def plot_final_roc_curve(self):
+    def plot_final_roc_curve(self) -> None:
         """
         Plots ROC curves for the best model on the test set.
         """
@@ -111,7 +135,6 @@ class BaselineModel():
                 y_test_bin[:, i], y_score[:, i])
             roc_auc[class_id] = auc(fpr[class_id], tpr[class_id])
 
-        # Plot all ROC curves
         plt.figure(figsize=(10, 7))
         for class_id in classes:
             plt.plot(fpr[class_id], tpr[class_id], label=(
@@ -128,7 +151,7 @@ class BaselineModel():
         plt.tight_layout()
         plt.show()
 
-    def plot_confusion_matrix(self, y_pred):
+    def plot_confusion_matrix(self, y_pred: np.ndarray) -> None:
         """
         Plots the confusion matrix, shows it, and prints the raw table/
         """
@@ -141,11 +164,13 @@ class BaselineModel():
         print("Raw matrix:")
         print(cm)
 
-    def pipeline(self, training=True):
+    def pipeline(self, training: bool = True) -> None:
         """
-        Runs the preprocessing pipeline, trains the model, prints the
-        classification report for the grid predictions on the test set,
-        and displays the model's performance.
+        Run end-to-end: preprocess data, train or load model, then evaluate
+        and plot performance metrics.
+
+        Args:
+            training: If True, retrain model; otherwise load existing model.
         """
         preprocesser_tfidf = BaselinePreprocessor()
         data = preprocesser_tfidf.preprocessing_pipeline(at_inference=False)

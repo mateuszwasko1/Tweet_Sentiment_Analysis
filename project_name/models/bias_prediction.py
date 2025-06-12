@@ -18,8 +18,10 @@ predictor_baseline = PredictEmotion(baseline=True)
 more_results, more_confs = predictor.predict(bias_df["sent_more"].tolist())
 less_results, less_confs = predictor.predict(bias_df["sent_less"].tolist())
 
-more_results_base, more_confs_base = predictor_baseline.predict(bias_df["sent_more"].tolist())
-less_results_base, less_confs_base = predictor_baseline.predict(bias_df["sent_less"].tolist())
+more_results_base, more_confs_base = predictor_baseline.predict(
+    bias_df["sent_more"].tolist())
+less_results_base, less_confs_base = predictor_baseline.predict(
+    bias_df["sent_less"].tolist())
 
 comparison_df = pd.DataFrame({
     "sent_more": bias_df["sent_more"],

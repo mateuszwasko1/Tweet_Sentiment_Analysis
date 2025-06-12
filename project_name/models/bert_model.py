@@ -12,17 +12,32 @@ from torch.nn import CrossEntropyLoss
 import matplotlib.pyplot as plt
 from torch.optim import AdamW
 from tqdm.auto import tqdm
+from torch import Tensor
 import numpy as np
 import joblib
 import torch
 
 
 class BertModel:
-    def __init__(self):
+    """
+    Fine-tunes and evaluates a BERT-based sequence classification model
+    for emotion detection.
+    """
+    def __init__(self) -> None:
+        """
+        Initialize device (GPU if available, otherwise CPU).
+        """
         self._device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
 
-    def _tokenization(self, X):
+    def _tokenization(self, X: np.ndarray) -> dict[str, Tensor]:
+        """
+        Tokenize a sequence of texts into input IDs and attention masks.
+        Args:
+            texts: Array of raw text strings.
+        Returns:
+            A dict containing 'input_ids' and 'attention_mask' tensors.
+        """
         return self._tokenizer(
             X.tolist(),
             truncation=True,
@@ -31,7 +46,22 @@ class BertModel:
             return_tensors="pt"
         )
 
-    def _organize_data(self, data, batch_size=16):
+    def _organize_data(self, data:
+                       tuple[tuple[np.ndarray, np.ndarray],
+                             tuple[np.ndarray, np.ndarray],
+                             tuple[np.ndarray, np.ndarray]],
+                       batch_size: int = 16) -> tuple[DataLoader, DataLoader,
+                                                      DataLoader, int]:
+        """
+        Convert raw features into DataLoaders and compute class weights.
+        Args:
+            data: ((X_train, y_train),
+                   (X_dev,   y_dev),
+                   (X_test,  y_test))
+            batch_size: Number of samples per batch.
+        Returns:
+            Train, dev, and test DataLoaders, and number of unique labels.
+        """
         (X_training, y_training), (X_dev, y_dev), (X_test, y_test) = data
 
         number_of_labels = len(np.unique(y_training))
@@ -66,7 +96,17 @@ class BertModel:
 
         return train_loader, dev_loader, test_loader, number_of_labels
 
-    def _get_model(self, number_of_labels, model_name, dropout):
+    def _get_model(self, number_of_labels: int, model_name: str,
+                   dropout: float) -> AutoModelForSequenceClassification:
+        """
+        Load a pretrained transformer with modified classification head.
+        Args:
+            num_labels: Number of output classes.
+            model_name: HuggingFace model identifier.
+            dropout: Dropout rate for classifier head.
+        Returns:
+            A model ready for fine-tuning.
+        """
         config = AutoConfig.from_pretrained(
             model_name,
             num_labels=number_of_labels,
@@ -79,13 +119,27 @@ class BertModel:
         return model
 
     def _model_training(self,
-                        model,
-                        X_training,
-                        X_dev,
-                        epochs=15,
-                        early_stopping=True,
-                        lr=5e-5,
-                        weight_decay=0.00):
+                        model: AutoModelForSequenceClassification,
+                        X_training: DataLoader,
+                        X_dev: DataLoader,
+                        epochs: int = 15,
+                        early_stopping: bool = True,
+                        lr: float = 5e-5,
+                        weight_decay: float =
+                        0.00) -> AutoModelForSequenceClassification:
+        """
+        Fine-tune the model on the training set, with optional early stopping.
+        Args:
+            model: Sequence classification model.
+            train_loader: Training data loader.
+            dev_loader:   Development data loader.
+            epochs:       Maximum epochs to train.
+            early_stopping: Whether to stop early on no improvement.
+            lr:           Learning rate.
+            weight_decay: Weight decay (L2) factor.
+        Returns:
+            The best model state (by lowest dev loss).
+        """
         optimizer = AdamW(model.parameters(), lr=lr, weight_decay=weight_decay)
         EPOCHS = epochs
         self._train_losses = []
@@ -185,13 +239,20 @@ class BertModel:
 
     def _saving_model(
             self,
-            model,
-            label_encoder):
+            model: AutoModelForSequenceClassification,
+            label_encoder: np.ndarray) -> None:
+        """
+        Persist the fine-tuned model and tokenizer to disk, plus label encoder.
+        Args:
+            model:          Fine-tuned transformer.
+            label_encoder:  numpy array mapping indices to labels.
+            directory:      Output directory prefix.
+        """
         model.save_pretrained(f"{self._save_directory}model")
         self._tokenizer.save_pretrained(f"{self._save_directory}model")
         joblib.dump(label_encoder, f"{self._save_directory}label_encoder")
 
-    def _plot_roc_curve(self, y_true, y_score):
+    def _plot_roc_curve(self, y_true: np.ndarray, y_score: np.ndarray) -> None:
         classes = np.unique(y_true)
         y_bin = label_binarize(y_true, classes=classes)
 
@@ -220,7 +281,15 @@ class BertModel:
         plt.savefig(f"{self._save_directory}auc.png", dpi=300)
         plt.close()
 
-    def _evaluation(self, model, X_test):
+    def _evaluation(self, model: AutoModelForSequenceClassification,
+                    X_test: DataLoader) -> None:
+        """
+        Evaluate model on the test set: accuracy, classification report,
+        and ROC curves.
+        Args:
+            model:       Fine-tuned transformer.
+            test_loader: DataLoader for test data.
+        """
         model.eval()
         all_predictions = []
         all_lables = []
@@ -260,9 +329,12 @@ class BertModel:
         self._plot_roc_curve(np.array(all_lables), np.array(all_probs))
         self._plot_loss()
 
-    def _plot_loss(self):
-
-        plt.figure(figsize=(8,5))
+    def _plot_loss(self) -> None:
+        """
+        Plot training and validation loss over epochs.
+        Saves the plot to the specified directory.
+        """
+        plt.figure(figsize=(8, 5))
         epochs = range(1, len(self._train_losses) + 1)
         plt.plot(epochs, self._train_losses, label="Train Loss")
         plt.plot(epochs, self._val_losses,   label="Validation Loss")
@@ -273,7 +345,11 @@ class BertModel:
         plt.savefig(f"{self._save_directory}loss.png", dpi=300)
         plt.close()
 
-    def pipeline(self):
+    def pipeline(self) -> None:
+        """
+        End-to-end: preprocess data, fine-tune model, save artifacts,
+        and evaluate on test set.
+        """
         # Model Parameters #
         model_type = "roberta-base"
         early_stopping = True
@@ -305,5 +381,4 @@ class BertModel:
         self._saving_model(
             best_model,
             self._label_encoder)
-        metrics = self._evaluation(best_model, test_loader)
-        return metrics
+        self._evaluation(best_model, test_loader)
