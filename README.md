@@ -1,18 +1,30 @@
-# INSTRUCTIONS ON HOW TO RUN THE API AND INSTALL THE DEPENDENCIES
+# INSTRUCTIONS ON HOW TO OPERATE THIS PROJECT
 
-# STARTING THE STREAMLIT
-
-Make sure you are in the pipenv environment and that everything is updated:
+## INSTALL THE DEPENDENCIES
+Before running anything you have to make sure you are in the correct env:
+Make sure that Pipenv is installed.
 ```bash
-pipenv shell
-
-pipenv install
+    pip install pipenv
 ```
-Then run the main.py file:
+```bash
+# to activate the python environment
+    pipenv shell 
+# to install the dependencies from the Pipfile
+    pipenv install 
+```
+## TRAIN A MODEL OR CHECK FOR BIAS
+In order to train a model or check for bias you have to run the following command and answer the questions in the terminal
+```bash
+python training_or_bias.py
+```
+
+## RUNNING THE DEMO
+In order to run the demo (the streamlit) you can run the following command:
 ```bash
 python main.py
 ```
-Then you can access the streamlit: [http://localhost:8501/](http://localhost:8501/)
+It should take you to a the streamlit, but if it does not go to this link:
+[http://localhost:8501/](http://localhost:8501/)
 
 ## RUNNING THE API
 Run the following code in the terminal to start the API
@@ -29,23 +41,5 @@ Response Body
 "input":"you are stupid",
 "prediction":"anger"
 }
-```
-
-## INSTALL THE DEPENDENCIES
-Make sure that Pipenv is installed.
-```bash
-    pip install pipenv
-```
-```bash
-# to activate the python environment
-    pipenv shell 
-# to install the dependencies from the Pipfile
-    pipenv install 
-```
-
-Note that the code below can also install the exact versions from Pipfile.lock
-```bash
-# to activate the python environment
-   pipenv sync
 ```
 
