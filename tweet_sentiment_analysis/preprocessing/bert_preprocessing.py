@@ -158,11 +158,3 @@ class MainPreprocessing:
                 raise TypeError("Data must be a pandas DataFrame.")
             preprocessed_df = self._preprocess_df(data)
             return preprocessed_df
-
-
-if __name__ == "__main__":
-    preprocessor = MainPreprocessing()
-    ((X_training, y_training),
-     (X_dev, y_dev), (X_test, y_test)) = preprocessor.preprocessing_pipeline()
-
-    print(X_training[7])

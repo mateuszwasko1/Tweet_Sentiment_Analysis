@@ -114,12 +114,13 @@ if st.button("Classify"):
                                 raise
                             time.sleep(1)
                         except Exception as e:
-                            raise RuntimeError(f"Batch {idx+1} failed.") from e
+                            raise Exception(f"Batch {idx+1} failed: {e}")
                     progress.progress((idx+1)/total_batches)
 
                 df_res = pd.DataFrame(results)
-                st.success(f"Classified {len(results)} tweets with batch size"
-                           "{bs} and timeout {timeout}s using {model_choice}.")
+                st.success(
+                    f"Classified {len(results)} tweets with batch size {bs} "
+                    f"and timeout {timeout}s using {model_choice}.")
                 st.subheader("Full Results")
                 st.dataframe(df_res)
 

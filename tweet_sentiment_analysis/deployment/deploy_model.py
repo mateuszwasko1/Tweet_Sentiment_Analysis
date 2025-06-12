@@ -79,6 +79,7 @@ async def predict(
     predictor = PredictEmotion(baseline=bool(baseline))
     results: List[Prediction] = []
     for item in input_data:
+        emotion, confidence = predictor.output_emotion(item.text)
         try:
             emotion, confidence = predictor.output_emotion(item.text)
         except Exception:

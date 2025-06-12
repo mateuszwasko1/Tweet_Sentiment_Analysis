@@ -27,7 +27,7 @@ class PredictEmotion():
     Interface to classify emotions in text using either a baseline
     scikit-learn model or a BERT-based transformer model.
     """
-    def __init__(self, baseline: bool = False) -> None:
+    def __init__(self, baseline: bool = True) -> None:
         """
         Load the chosen model and its preprocessing pipeline.
 
@@ -142,10 +142,3 @@ class PredictEmotion():
         if isinstance(prediction, (np.ndarray, list)):
             return str(prediction[0]), float(round(confidence, 2))
         return str(prediction), float(round(confidence, 2))
-
-
-if __name__ == "__main__":
-    predictor = PredictEmotion(baseline=False)
-    sample_text = "I am happy"
-    pred, conf = predictor.output_emotion(sample_text)
-    print(f"Prediction: {pred}, Confidence: {conf:.2f}")
