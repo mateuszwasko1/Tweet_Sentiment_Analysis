@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException, Body, Query
 from pydantic import BaseModel
-from project_name.deployment.process_deployment import PredictEmotion
+from tweet_sentiment_analysis.deployment.process_deployment import PredictEmotion
 from starlette.responses import RedirectResponse
 from typing import List, Optional
 
@@ -10,7 +10,8 @@ app = FastAPI(
     description="""
     ## API Usage
 
-    Choose `?baseline=1` for the Logistic Regression baseline or omit / set to 0 for RoBERTa.
+    Choose `?baseline=1` for the Logistic Regression baseline or omit /
+    set to 0 for RoBERTa.
 
     ### Input format
     - Send a list of `{ text: string }` objects.
@@ -47,7 +48,8 @@ async def info(
 ):
     """Return model name and supported classes."""
     predictor = PredictEmotion(baseline=bool(baseline))
-    model_name = "Baseline Logistic Regression" if predictor.baseline else "RoBERTa"
+    model_name = "Baseline Logistic Regression" if (
+        predictor.baseline) else "RoBERTa"
     return {
         "model": model_name,
         "classes": ["anger", "joy", "sadness", "fear"]
@@ -64,7 +66,8 @@ async def predict(
     )
 ):
     """
-    Predict emotion(s) for tweet(s). Use `?baseline=1` to select the Logistic Regression model.
+    Predict emotion(s) for tweet(s). Use `?baseline=1` to select the
+    Logistic Regression model.
     """
     predictor = PredictEmotion(baseline=bool(baseline))
     results: List[Prediction] = []

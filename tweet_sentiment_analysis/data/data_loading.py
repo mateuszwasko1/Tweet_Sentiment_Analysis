@@ -1,9 +1,19 @@
 import pandas as pd
 import os
+from typing import Tuple, List
 
 
 class DataLoading():
-    def __init__(self):
+    """
+    Class for loading and merging emotion datasets from raw text files.
+
+    Attributes:
+        base_input (str): Path to the folder containing original emotion files.
+        base_output (str): Path to the folder where
+        merged JSON files will be saved.
+        emotions (List[str]): List of emotion labels to process.
+    """
+    def __init__(self) -> None:
         """
         Stores the relative paths of the dowloaded data and desired path for
         saving the converted and merged data.
@@ -11,10 +21,12 @@ class DataLoading():
         script_dir = os.path.dirname(os.path.abspath(__file__))
         self.base_input = os.path.join(script_dir, "..", "..", "data",
                                        "original", "EI-reg")
-        self.base_output = os.path.join(script_dir, "..", "..", "data", "raw")
-        self.emotions = ["anger", "fear", "sadness", "joy"]
+        self.base_output: str = os.path.join(
+            script_dir, "..", "..", "data", "raw"
+        )
+        self.emotions: List[str] = ["anger", "fear", "sadness", "joy"]
 
-    def merge_emotions_to_df(self, dataset: str) -> tuple[pd.DataFrame,
+    def merge_emotions_to_df(self, dataset: str) -> Tuple[pd.DataFrame,
                                                           os.PathLike]:
         """
         Loads all emotion txt files into one DataFrame.
@@ -24,13 +36,13 @@ class DataLoading():
             be merged.
 
         Returns:
-            pd.DataFrame: The merged emotions of the given dataset
-            os.PathLike: The path where a json file of the created DataFrame
-            can be stored
+            Tuple[pd.DataFrame, os.PathLike]:
+                - merged_df: DataFrame of all emotions
+                - json_path: path where the JSON should be saved
 
         Raises:
-            ValueError: If the passed dataset is not in the allowed set of
-            strings.
+            FileNotFoundError: If any of the expected emotion
+            files are missing.
         """
         valid_datasets = ["development", "test-gold", "training"]
         if dataset not in valid_datasets:
@@ -64,9 +76,17 @@ class DataLoading():
 
         return merged_df, json_path
 
-    def loading_pipeline(self):
+    def loading_pipeline(self) -> None:
         """
-        Loads all the merged datasets into JSON files for later retrieval.
+        Runs the merge on all splits and writes each merged DataFrame to JSON.
+
+        Writes files:
+            data/raw/development_merged.json
+            data/raw/test-gold_merged.json
+            data/raw/training_merged.json
+
+        Returns:
+            None
         """
         datasets = ["development", "test-gold", "training"]
         loading = DataLoading()

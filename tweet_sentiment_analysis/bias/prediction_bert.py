@@ -1,4 +1,4 @@
-from project_name.preprocessing.ekphrasis_preprocessing import (
+from tweet_sentiment_analysis.preprocessing.bert_preprocessing import (
     MainPreprocessing)
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 import torch
@@ -8,10 +8,10 @@ from tqdm import tqdm
 from torch.utils.data import DataLoader, TensorDataset
 
 
-class PredictEkphrasisBert():
+class PredictBert():
     def __init__(self):
-        bert_model_path = "/kaggle/input/bias012345678901234/biasprediction/models/saved_bert/model"
-        bert_label_encoder_path = "/kaggle/input/bias012345678901234/biasprediction/models/saved_bert/label_encoder"
+        bert_model_path = "models/saved_bert/model"
+        bert_label_encoder_path = "models/saved_bert/label_encoder"
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
         self.bert_model = AutoModelForSequenceClassification.from_pretrained(
@@ -31,7 +31,7 @@ class PredictEkphrasisBert():
             padding=True,
             max_length=128,
             return_tensors="pt")
-        
+
         dataset = TensorDataset(train_encodings["input_ids"],
                                 train_encodings["attention_mask"])
         dataloader = DataLoader(dataset, batch_size=batch_size)
@@ -40,7 +40,8 @@ class PredictEkphrasisBert():
         all_confs = []
 
         with torch.no_grad():
-            for input_ids, attention_mask in tqdm(dataloader, desc="batch prediction"):
+            for input_ids, attention_mask in tqdm(
+                    dataloader, desc="batch prediction"):
                 input_ids = input_ids.to(self.device)
                 attention_mask = attention_mask.to(self.device)
 

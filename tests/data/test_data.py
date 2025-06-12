@@ -1,7 +1,7 @@
 import unittest
 import os
 import json
-from project_name.data.data_loading import DataLoading
+from tweet_sentiment_analysis.data.data_loading import DataLoading
 
 
 class DataLoadingTest(unittest.TestCase):

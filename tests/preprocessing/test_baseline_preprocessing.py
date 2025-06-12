@@ -1,7 +1,7 @@
 import unittest
 import os
 import json
-from project_name import BaselinePreprocessor
+from tweet_sentiment_analysis import BaselinePreprocessor
 import pandas as pd
 import pandas.testing as pd_t
 

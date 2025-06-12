@@ -5,7 +5,7 @@ import os
 class ModelSaver():
     """
     Provides utilities to save and load Python objects (models) via pickle.
-    
+
     Attributes:
         path (str): Filesystem directory where models are stored.
     """
@@ -15,7 +15,8 @@ class ModelSaver():
         relative to this script's location.
         """
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        self.path = os.path.join(script_dir, "..", "..", "models")
+        self.path = os.path.join(script_dir, "..", "..", "output", "baseline")
+        os.makedirs(self.path, exist_ok=True)
 
     def save_model(self, model: object, file_name: str) -> None:
         """
@@ -28,7 +29,6 @@ class ModelSaver():
         file_path = os.path.join(self.path, file_name)
         with open(file_path, 'wb') as file:
             pickle.dump(model, file)
-        print(f"Model saved to {file_path}")
 
     def load_model(self, file_name: str) -> object:
         """
@@ -48,5 +48,4 @@ class ModelSaver():
                                     {self.path}.")
         with open(file_path, 'rb') as file:
             model = pickle.load(file)
-        print(f"Model loaded from {file_path}")
         return model

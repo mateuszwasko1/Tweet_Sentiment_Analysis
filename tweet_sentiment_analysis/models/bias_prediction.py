@@ -5,7 +5,7 @@ import os
 sys.path.append(os.path.abspath(os.path.join(
     os.path.dirname(__file__), '../..')))
 
-from project_name.deployment.process_deployment import PredictEmotion
+from tweet_sentiment_analysis.deployment.process_deployment import PredictEmotion
 
 bias_path = "/kaggle/input/bias2345678/biasprediction/data/bias_data/" \
             "crows_pairs.csv"

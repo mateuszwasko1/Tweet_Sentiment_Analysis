@@ -1,4 +1,4 @@
-from project_name.preprocessing.bert_preprocessing import (
+from tweet_sentiment_analysis.preprocessing.bert_preprocessing import (
     MainPreprocessing)
 from transformers import (
     AutoTokenizer, AutoModelForSequenceClassification, AutoConfig)
@@ -278,7 +278,7 @@ class BertModel:
         plt.ylabel("True Positive Rate")
         plt.title("ROC Curve for BERT Model")
         plt.legend(loc="lower right")
-        plt.savefig(f"{self._save_directory}auc.png", dpi=300)
+        plt.show()
         plt.close()
 
     def _evaluation(self, model: AutoModelForSequenceClassification,
@@ -321,10 +321,8 @@ class BertModel:
         disp.plot(cmap=plt.cm.Blues)
         plt.title("Confusion Matrix - RoBERTa")
         plt.tight_layout()
-        plt.savefig(f"{self._save_directory}confusion.png", dpi=300)
+        plt.show()
         plt.close()
-        print("Raw Confusion Matrix:")
-        print(cm)
 
         self._plot_roc_curve(np.array(all_lables), np.array(all_probs))
         self._plot_loss()
@@ -342,7 +340,7 @@ class BertModel:
         plt.ylabel("Loss")
         plt.title("Training & Validation Loss")
         plt.legend()
-        plt.savefig(f"{self._save_directory}loss.png", dpi=300)
+        plt.show()
         plt.close()
 
     def pipeline(self) -> None:
@@ -358,7 +356,7 @@ class BertModel:
         weight_decay = 0.01
         batch_size = 32
         dropout = 0.3
-        self._save_directory = "models/saved_bert/"
+        self._save_directory = "output/saved_bert/"
 
         # Pipeline #
         ekphrasis_preprocessing = MainPreprocessing()

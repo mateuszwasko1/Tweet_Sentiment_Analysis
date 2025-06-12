@@ -1,6 +1,6 @@
-from project_name.preprocessing.baseline_preprocessing import (
+from tweet_sentiment_analysis.preprocessing.baseline_preprocessing import (
     BaselinePreprocessor)
-from project_name.models.save_load_model import ModelSaver
+from tweet_sentiment_analysis.models.save_load_model import ModelSaver
 from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import (
     classification_report, confusion_matrix, ConfusionMatrixDisplay)
@@ -96,27 +96,6 @@ class BaselineModel():
         print(classification_report(self.y_test, grid_predictions))
         return grid_predictions
 
-    def loss_plotter(self) -> None:
-        """
-        Plot training and validation scores against regularization C values.
-        """
-        grid = self.model
-        mean_train_scores = grid.cv_results_['mean_train_score']
-        mean_val_scores = grid.cv_results_['mean_test_score']
-        param_C = [params['C'] for params in grid.cv_results_['params']]
-
-        plt.figure(figsize=(8, 5))
-        plt.plot(param_C, mean_train_scores, label='Training Score',
-                 marker='o')
-        plt.plot(param_C, mean_val_scores, label='Validation Score',
-                 marker='o')
-        plt.xscale('log')
-        plt.xlabel('C (log scale)')
-        plt.ylabel('Score')
-        plt.title('Training vs Validation Score for Different C')
-        plt.legend()
-        plt.show()
-
     def plot_final_roc_curve(self) -> None:
         """
         Plots ROC curves for the best model on the test set.
@@ -150,6 +129,7 @@ class BaselineModel():
         plt.grid(True)
         plt.tight_layout()
         plt.show()
+        plt.close()
 
     def plot_confusion_matrix(self, y_pred: np.ndarray) -> None:
         """
@@ -160,9 +140,7 @@ class BaselineModel():
         disp.plot(cmap=plt.cm.Blues)
         plt.title("Baseline Confusion Matrix")
         plt.show()
-        plt.clf()
-        print("Raw matrix:")
-        print(cm)
+        plt.close()
 
     def pipeline(self, training: bool = True) -> None:
         """
@@ -185,9 +163,3 @@ class BaselineModel():
         predictions = self.evaluate()
         self.plot_final_roc_curve()
         self.plot_confusion_matrix(predictions)
-        self.loss_plotter()
-
-
-if __name__ == "__main__":
-    baseline_model = BaselineModel()
-    baseline_model.pipeline(training=True)

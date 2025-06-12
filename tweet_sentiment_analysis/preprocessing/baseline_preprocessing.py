@@ -3,7 +3,7 @@ import os
 import scipy.sparse
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer
-from project_name.models.save_load_model import ModelSaver
+from tweet_sentiment_analysis.models.save_load_model import ModelSaver
 
 
 class BaselinePreprocessor:

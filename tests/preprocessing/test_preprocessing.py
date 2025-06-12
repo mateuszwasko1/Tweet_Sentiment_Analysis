@@ -1,5 +1,5 @@
 import unittest
-from project_name.preprocessing.bert_preprocessing import (
+from tweet_sentiment_analysis.preprocessing.bert_preprocessing import (
     MainPreprocessing)
 
 
