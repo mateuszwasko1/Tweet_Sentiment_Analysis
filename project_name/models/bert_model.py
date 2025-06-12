@@ -281,7 +281,7 @@ class BertModel:
         lr = 2e-5
         weight_decay = 0.01
         batch_size = 32
-        dropout = 0.03
+        dropout = 0.3
         self._save_directory = "models/saved_bert/"
 
         # Pipeline #
