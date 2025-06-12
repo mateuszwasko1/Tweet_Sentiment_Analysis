@@ -10,8 +10,8 @@ from torch.utils.data import DataLoader, TensorDataset
 
 class PredictBert():
     def __init__(self):
-        bert_model_path = "models/saved_bert/model"
-        bert_label_encoder_path = "models/saved_bert/label_encoder"
+        bert_model_path = "output/saved_bert/model"
+        bert_label_encoder_path = "output/saved_bert/label_encoder"
         self.device = torch.device(
             "cuda" if torch.cuda.is_available() else "cpu")
         self.bert_model = AutoModelForSequenceClassification.from_pretrained(

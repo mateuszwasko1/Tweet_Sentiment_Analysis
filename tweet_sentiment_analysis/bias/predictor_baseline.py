@@ -8,8 +8,8 @@ from tqdm import tqdm
 
 class PredictBaseline():
     def __init__(self):
-        baseline_model_path = "models/baseline_model"
-        vectoriser_path = "models/tfidf_vectorizer"
+        baseline_model_path = "output/baseline/baseline_model"
+        vectoriser_path = "output/baseline/tfidf_vectorizer"
         with open(baseline_model_path, "rb") as f:
             self.model = pickle.load(f)
         self.vectoriser = joblib.load(vectoriser_path)

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException, Body, Query
 from pydantic import BaseModel
-from tweet_sentiment_analysis.deployment.process_deployment import PredictEmotion
+from tweet_sentiment_analysis.deployment.process_deployment import (
+    PredictEmotion)
 from starlette.responses import RedirectResponse
 from typing import List, Optional
 
@@ -21,21 +22,26 @@ app = FastAPI(
     """
 )
 
+
 class Input(BaseModel):
     text: str
+
 
 class Prediction(BaseModel):
     input: str
     prediction: str
     confidence: float
 
+
 @app.get("/", include_in_schema=False)
 async def root():
     return RedirectResponse(url='/docs')
 
+
 @app.get("/health")
 async def health():
     return {"status": "ok"}
+
 
 @app.get("/info")
 async def info(
@@ -54,6 +60,7 @@ async def info(
         "model": model_name,
         "classes": ["anger", "joy", "sadness", "fear"]
     }
+
 
 @app.post("/predict")
 async def predict(
@@ -77,6 +84,7 @@ async def predict(
         except Exception:
             raise HTTPException(status_code=422, detail="Prediction error")
         results.append(
-            Prediction(input=item.text, prediction=emotion, confidence=confidence)
+            Prediction(input=item.text, prediction=emotion,
+                       confidence=confidence)
         )
     return results

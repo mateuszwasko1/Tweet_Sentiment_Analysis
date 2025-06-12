@@ -22,19 +22,47 @@ batch_size = st.sidebar.slider(
 
 st.markdown("""
 <style>
-  .stButton>button { background-color: #1f77b4; color: white; border-radius: 5px; font-weight: bold; }
-  .stButton>button:hover { background-color: #155d8b; }
-  .stTable thead th { background-color: #4CAF50; color: white; text-transform: uppercase; }
-  .main-title { font-size: 2.5rem; color: #d62728; font-weight: bold; }
-  .info-panel { background-color: #f0f8ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-  .footer { border-top: 2px solid #2ca02c; padding-top: 10px; margin-top: 20px; color: #2ca02c; font-style: italic; }
+.stButton>button {
+    background-color: #1f77b4;
+    color: white;
+    border-radius: 5px;
+    font-weight: bold;
+}
+.stButton>button:hover {
+    background-color: #155d8b;
+}
+.stTable thead th {
+    background-color: #4CAF50;
+    color: white;
+    text-transform: uppercase;
+}
+.main-title {
+    font-size: 2.5rem;
+    color: #d62728;
+    font-weight: bold;
+}
+.info-panel {
+    background-color: #f0f8ff;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+.footer {
+    border-top: 2px solid #2ca02c;
+    padding-top: 10px;
+    margin-top: 20px;
+    color: #2ca02c;
+    font-style: italic;
+}
 </style>
 """, unsafe_allow_html=True)
 
-st.markdown('<div class="main-title">Tweet Emotion Classifier Demo</div>', unsafe_allow_html=True)
+st.markdown('<div class="main-title">Tweet Emotion Classifier Demo</div>',
+            unsafe_allow_html=True)
 st.markdown(f"""
 <div class="info-panel">
-  Using <strong>{model_choice}</strong>. Upload a CSV or paste tweets below. The app dynamically adjusts batch size and timeout on timeouts.
+  Using <strong>{model_choice}</strong>. Upload a CSV or paste tweets below.
+  The app dynamically adjusts batch size and timeout on timeouts.
 </div>
 """, unsafe_allow_html=True)
 
@@ -56,7 +84,7 @@ if uploaded_file:
 if not texts:
     area = st.text_area("Enter tweets (one per line)", height=150)
     if area:
-        texts = [l.strip() for l in area.splitlines() if l.strip()]
+        texts = [line.strip() for line in area.splitlines() if line.strip()]
 if texts:
     st.info(f"Loaded {len(texts)} tweets.")
 
@@ -76,7 +104,8 @@ if st.button("Classify"):
                     batch = [{"text": t} for t in texts[idx*bs:(idx+1)*bs]]
                     for attempt in range(1, MAX_RETRIES+1):
                         try:
-                            resp = requests.post(API_URL, json=batch, timeout=timeout)
+                            resp = requests.post(API_URL, json=batch,
+                                                 timeout=timeout)
                             resp.raise_for_status()
                             results.extend(resp.json())
                             break
@@ -85,11 +114,12 @@ if st.button("Classify"):
                                 raise
                             time.sleep(1)
                         except Exception as e:
-                            raise Exception(f"Batch {idx+1}/{total_batches} failed: {e}")
+                            raise RuntimeError(f"Batch {idx+1} failed.") from e
                     progress.progress((idx+1)/total_batches)
 
                 df_res = pd.DataFrame(results)
-                st.success(f"Classified {len(results)} tweets with batch size {bs} and timeout {timeout}s using {model_choice}.")
+                st.success(f"Classified {len(results)} tweets with batch size"
+                           "{bs} and timeout {timeout}s using {model_choice}.")
                 st.subheader("Full Results")
                 st.dataframe(df_res)
 
@@ -102,7 +132,8 @@ if st.button("Classify"):
                 )
 
                 if 'prediction' in df_res.columns:
-                    summary = df_res['prediction'].value_counts().rename_axis('emotion').reset_index(name='count')
+                    summary = df_res['prediction'].value_counts().rename_axis(
+                        'emotion').reset_index(name='count')
                     st.subheader("Emotion Summary")
                     st.bar_chart(summary.set_index('emotion')['count'])
                 break
@@ -110,7 +141,8 @@ if st.button("Classify"):
             except Exception as e:
                 if "timed out" in str(e).lower() and bs > 1:
                     st.warning(
-                        f"Timeout with batch size {bs} and timeout {timeout}s. Halving batch size and doubling timeout."
+                        f"Timeout with batch size {bs} and timeout {timeout}s."
+                        " Halving batch size and doubling timeout."
                     )
                     bs //= 2
                     timeout *= TIMEOUT_MULTIPLIER
