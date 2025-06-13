@@ -5,7 +5,7 @@ import os
 
 """
 By running this file you can either train the baseline model (logistic
-regression) or roBERTa. If there is a model in the direcory you can run bias
+regression) or roBERTa. If there is a model in the directory you can run bias
 analysis on it.
 
 To run ensure you are in the environment by running "pipenv shell" and then
