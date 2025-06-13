@@ -10,7 +10,6 @@ kaggle = "*"
 datasets = "*"
 seaborn = "*"
 matplotlib = "*"
-scikit-learn = "*"
 wordcloud = "*"
 jupyter = "*"
 ipykernel = "*"
@@ -27,6 +26,9 @@ lxml = "*"
 nltk = "*"
 clean-text = ">=0.6.0"
 streamlit = "*"
+scipy = "*"
+numpy = "*"
+scikit-learn = "*"
 
 [dev-packages]
 
